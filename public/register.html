@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Registro</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="auth-box">
+
+<h1>🌍 Quiniela Mundial</h1>
+
+<h2>Crear Cuenta</h2>
+
+<input type="text" id="nombre" placeholder="Usuario">
+
+<input type="password" id="password" placeholder="Contraseña">
+
+<button onclick="register()">
+Registrarse
+</button>
+
+<p>
+<a href="login.html">
+Volver al login
+</a>
+</p>
+
+</div>
+
+<script>
+
+async function register() {
+
+    const nombre =
+        document.getElementById('nombre').value;
+
+    const password =
+        document.getElementById('password').value;
+
+    const res = await fetch('/register', {
+
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+            nombre,
+            password
+        })
+
+    });
+
+    const data = await res.json();
+
+    alert(data.mensaje);
+
+    if (data.ok) {
+
+        window.location.href = '/login.html';
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>

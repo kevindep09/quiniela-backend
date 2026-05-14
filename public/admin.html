@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Panel Admin</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <h1>
+        ⚙️ Panel Admin
+    </h1>
+
+    <button id="logoutBtn">
+        🚪 Cerrar sesión
+    </button>
+
+    <hr>
+
+    <h2>
+        ➕ Crear Partido
+    </h2>
+
+    <select id="grupo">
+
+        <option value="A">Grupo A</option>
+        <option value="B">Grupo B</option>
+        <option value="C">Grupo C</option>
+        <option value="D">Grupo D</option>
+        <option value="E">Grupo E</option>
+        <option value="F">Grupo F</option>
+        <option value="G">Grupo G</option>
+        <option value="H">Grupo H</option>
+        <option value="I">Grupo I</option>
+        <option value="J">Grupo J</option>
+        <option value="K">Grupo K</option>
+        <option value="L">Grupo L</option>
+
+    </select>
+
+    <input
+        type="text"
+        id="homeTeam"
+        placeholder="Equipo local"
+    >
+
+    <input
+        type="text"
+        id="awayTeam"
+        placeholder="Equipo visitante"
+    >
+
+    <input
+        type="date"
+        id="fecha"
+    >
+
+    <input
+        type="time"
+        id="hora"
+    >
+
+    <button onclick="crearPartido()">
+        Crear Partido ⚽
+    </button>
+
+    <hr>
+
+    <h2>
+        📋 Partidos
+    </h2>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+                <th>Grupo</th>
+                <th>Partido</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Resultado</th>
+                <th>Acciones</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="adminTabla"></tbody>
+
+    </table>
+
+    <hr>
+
+    <h2>
+        🏆 Crear Llave
+    </h2>
+
+    <select id="fase">
+
+        <option value="32avos">
+            32avos
+        </option>
+
+        <option value="octavos">
+            Octavos
+        </option>
+
+        <option value="cuartos">
+            Cuartos
+        </option>
+
+        <option value="semi">
+            Semifinal
+        </option>
+
+        <option value="final">
+            Final
+        </option>
+
+    </select>
+
+    <input
+        type="text"
+        id="eq1"
+        placeholder="Equipo 1"
+    >
+
+    <input
+        type="text"
+        id="eq2"
+        placeholder="Equipo 2"
+    >
+
+    <button onclick="crearBracket()">
+        Crear Llave 🏆
+    </button>
+
+    <hr>
+
+    <h2>
+        ⚙️ Generadores Automáticos
+    </h2>
+
+    <button onclick="generar32avos()">
+        Generar 32avos
+    </button>
+
+    <button onclick="generarOctavos()">
+        Generar Octavos
+    </button>
+
+    <button onclick="generarCuartos()">
+        Generar Cuartos
+    </button>
+
+    <button onclick="generarSemis()">
+        Generar Semis
+    </button>
+
+    <button onclick="generarFinal()">
+        Generar Final
+    </button>
+
+    <hr>
+
+    <h2>
+        🏆 Llaves Actuales
+    </h2>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+                <th>Fase</th>
+                <th>Partido</th>
+                <th>Ganador</th>
+                <th>Acciones</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="tablaBrackets"></tbody>
+
+    </table>
+
+    <script src="admin.js"></script>
+
+</body>
+
+</html>

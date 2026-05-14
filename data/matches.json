@@ -1,0 +1,754 @@
+[
+  {
+    "id": 1,
+    "grupo": "A",
+    "homeTeam": "México",
+    "awayTeam": "Sudafrica",
+    "fecha": "2026-06-11",
+    "hora": "15:00",
+    "estadio": "Azteca",
+    "resultado": {
+      "home": 1,
+      "away": 0
+    }
+  },
+  {
+    "id": 2,
+    "grupo": "A",
+    "homeTeam": "Corea del Sur",
+    "awayTeam": "Chequia",
+    "fecha": "2026-06-11",
+    "hora": "22:00",
+    "estadio": "Monterrey",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 3,
+    "grupo": "B",
+    "homeTeam": "Canada",
+    "awayTeam": "Bosnia y Herzegovina",
+    "fecha": "2026-06-12",
+    "hora": "15:00",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 4,
+    "grupo": "D",
+    "homeTeam": "Estados Unidos",
+    "awayTeam": "Paraguay",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 5,
+    "grupo": "B",
+    "homeTeam": "Catar",
+    "awayTeam": "Suiza",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 6,
+    "grupo": "C",
+    "homeTeam": "Brasil",
+    "awayTeam": "Marruecos",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 7,
+    "grupo": "C",
+    "homeTeam": "Haití",
+    "awayTeam": "Escocia",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 8,
+    "grupo": "D",
+    "homeTeam": "Australia",
+    "awayTeam": "Turquia",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 9,
+    "grupo": "E",
+    "homeTeam": "Alemania",
+    "awayTeam": "Curazao",
+    "resultado": {
+      "home": 3,
+      "away": 0
+    }
+  },
+  {
+    "id": 10,
+    "grupo": "F",
+    "homeTeam": "Paises Bajos",
+    "awayTeam": "Japon",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 11,
+    "grupo": "E",
+    "homeTeam": "Costa de Marfil",
+    "awayTeam": "Ecuador",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 12,
+    "grupo": "F",
+    "homeTeam": "Suecia",
+    "awayTeam": "Tunez",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 13,
+    "grupo": "H",
+    "homeTeam": "España",
+    "awayTeam": "Cabo verde",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 14,
+    "grupo": "G",
+    "homeTeam": "Belgica",
+    "awayTeam": "Egipto",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 15,
+    "grupo": "H",
+    "homeTeam": "Arabia Saudita",
+    "awayTeam": "Uruguay",
+    "resultado": {
+      "home": 3,
+      "away": 0
+    }
+  },
+  {
+    "id": 16,
+    "grupo": "G",
+    "homeTeam": "Iran",
+    "awayTeam": "Nueva Zelanda",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 17,
+    "grupo": "I",
+    "homeTeam": "Francia",
+    "awayTeam": "Senegal",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 18,
+    "grupo": "I",
+    "homeTeam": "Irak",
+    "awayTeam": "Noruega",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 19,
+    "grupo": "J",
+    "homeTeam": "Argentina",
+    "awayTeam": "Argelia",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 20,
+    "grupo": "J",
+    "homeTeam": "Austria",
+    "awayTeam": "Jordania",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 21,
+    "grupo": "K",
+    "homeTeam": "Portugal",
+    "awayTeam": "RD Congo",
+    "resultado": {
+      "home": 3,
+      "away": 0
+    }
+  },
+  {
+    "id": 22,
+    "grupo": "L",
+    "homeTeam": "Inglaterra",
+    "awayTeam": "Croacia",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 23,
+    "grupo": "L",
+    "homeTeam": "Ghana",
+    "awayTeam": "Panama",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 24,
+    "grupo": "K",
+    "homeTeam": "Uzbekistan",
+    "awayTeam": "Colombia",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 25,
+    "grupo": "A",
+    "homeTeam": "Chequia",
+    "awayTeam": "Sudafrica",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 26,
+    "grupo": "B",
+    "homeTeam": "Suiza",
+    "awayTeam": "Bosnia y Herzegovina",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 27,
+    "grupo": "B",
+    "homeTeam": "Canada",
+    "awayTeam": "Catar",
+    "resultado": {
+      "home": 3,
+      "away": 0
+    }
+  },
+  {
+    "id": 28,
+    "grupo": "A",
+    "homeTeam": "México",
+    "awayTeam": "Corea del Sur",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 29,
+    "grupo": "D",
+    "homeTeam": "Estados Unidos",
+    "awayTeam": "Australia",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 30,
+    "grupo": "C",
+    "homeTeam": "Escocia",
+    "awayTeam": "Marruecos",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 31,
+    "grupo": "C",
+    "homeTeam": "Brasil",
+    "awayTeam": "Haití",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 32,
+    "grupo": "D",
+    "homeTeam": "Turquia",
+    "awayTeam": "Paraguay",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 33,
+    "grupo": "F",
+    "homeTeam": "Paises Bajos",
+    "awayTeam": "Suecia",
+    "resultado": {
+      "home": 3,
+      "away": 0
+    }
+  },
+  {
+    "id": 34,
+    "grupo": "E",
+    "homeTeam": "Alemania",
+    "awayTeam": "Costa de Marfil",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 35,
+    "grupo": "E",
+    "homeTeam": "Ecuador",
+    "awayTeam": "Curazao",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 36,
+    "grupo": "F",
+    "homeTeam": "Tunez",
+    "awayTeam": "Japon",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 37,
+    "grupo": "H",
+    "homeTeam": "España",
+    "awayTeam": "Arabia Saudita",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 38,
+    "grupo": "G",
+    "homeTeam": "Belgica",
+    "awayTeam": "Iran",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 39,
+    "grupo": "H",
+    "homeTeam": "Uruguay",
+    "awayTeam": "Cabo verde",
+    "resultado": {
+      "home": 3,
+      "away": 0
+    }
+  },
+  {
+    "id": 40,
+    "grupo": "G",
+    "homeTeam": "Nueva Zelanda",
+    "awayTeam": "Egipto",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 41,
+    "grupo": "J",
+    "homeTeam": "Argentina",
+    "awayTeam": "Austria",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 42,
+    "grupo": "I",
+    "homeTeam": "Francia",
+    "awayTeam": "Irak",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 43,
+    "grupo": "I",
+    "homeTeam": "Noruega",
+    "awayTeam": "Senegal",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 44,
+    "grupo": "J",
+    "homeTeam": "Jordania",
+    "awayTeam": "Argelia",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 45,
+    "grupo": "K",
+    "homeTeam": "Portugal",
+    "awayTeam": "Uzbekistan",
+    "resultado": {
+      "home": 3,
+      "away": 0
+    }
+  },
+  {
+    "id": 46,
+    "grupo": "L",
+    "homeTeam": "Inglaterra",
+    "awayTeam": "Ghana",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 47,
+    "grupo": "L",
+    "homeTeam": "Panama",
+    "awayTeam": "Croacia",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 48,
+    "grupo": "K",
+    "homeTeam": "Colombia",
+    "awayTeam": "RD Congo",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 49,
+    "grupo": "B",
+    "homeTeam": "Suiza",
+    "awayTeam": "Canada",
+    "fecha": "2026-06-24",
+    "hora": "15:00",
+    "resultado": {
+      "home": 3,
+      "away": 3
+    }
+  },
+  {
+    "id": 50,
+    "grupo": "B",
+    "homeTeam": "Bosnia y Herzegovina",
+    "awayTeam": "Catar",
+    "fecha": "2026-06-24",
+    "hora": "15:00",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 51,
+    "grupo": "C",
+    "homeTeam": "Marruecos",
+    "awayTeam": "Haití",
+    "fecha": "2026-06-24",
+    "hora": "18:00",
+    "resultado": {
+      "home": 1,
+      "away": 0
+    }
+  },
+  {
+    "id": 52,
+    "grupo": "C",
+    "homeTeam": "Escocia",
+    "awayTeam": "Brasil",
+    "fecha": "2026-06-24",
+    "hora": "18:00",
+    "resultado": {
+      "home": 0,
+      "away": 2
+    }
+  },
+  {
+    "id": 53,
+    "grupo": "A",
+    "homeTeam": "Sudafrica",
+    "awayTeam": "Corea del Sur",
+    "fecha": "2026-06-24",
+    "hora": "21:00",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 54,
+    "grupo": "A",
+    "homeTeam": "Chequia",
+    "awayTeam": "México",
+    "fecha": "2026-06-24",
+    "hora": "21:00",
+    "resultado": {
+      "home": 1,
+      "away": 0
+    }
+  },
+  {
+    "id": 55,
+    "grupo": "E",
+    "homeTeam": "Curazao",
+    "awayTeam": "Costa de Marfil",
+    "fecha": "2026-06-25",
+    "hora": "16:00",
+    "resultado": {
+      "home": 0,
+      "away": 2
+    }
+  },
+  {
+    "id": 56,
+    "grupo": "E",
+    "homeTeam": "Ecuador",
+    "awayTeam": "Alemania",
+    "fecha": "2026-06-25",
+    "hora": "16:00",
+    "resultado": {
+      "home": 2,
+      "away": 3
+    }
+  },
+  {
+    "id": 57,
+    "grupo": "F",
+    "homeTeam": "Tunez",
+    "awayTeam": "Paises Bajos",
+    "fecha": "2026-06-25",
+    "hora": "19:00",
+    "resultado": {
+      "home": 0,
+      "away": 4
+    }
+  },
+  {
+    "id": 58,
+    "grupo": "F",
+    "homeTeam": "Japon",
+    "awayTeam": "Suecia",
+    "fecha": "2026-06-25",
+    "hora": "19:00",
+    "resultado": {
+      "home": 1,
+      "away": 1
+    }
+  },
+  {
+    "id": 59,
+    "grupo": "D",
+    "homeTeam": "Turquia",
+    "awayTeam": "Estados Unidos",
+    "fecha": "2026-06-25",
+    "hora": "22:00",
+    "resultado": {
+      "home": 0,
+      "away": 1
+    }
+  },
+  {
+    "id": 60,
+    "grupo": "D",
+    "homeTeam": "Paraguay",
+    "awayTeam": "Australia",
+    "fecha": "2026-06-25",
+    "hora": "22:00",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 61,
+    "grupo": "I",
+    "homeTeam": "Noruega",
+    "awayTeam": "Francia",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 62,
+    "grupo": "I",
+    "homeTeam": "Senegal",
+    "awayTeam": "Irak",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 63,
+    "grupo": "H",
+    "homeTeam": "Cabo verde",
+    "awayTeam": "Arabia Saudita",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 64,
+    "grupo": "H",
+    "homeTeam": "Uruguay",
+    "awayTeam": "España",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 65,
+    "grupo": "G",
+    "homeTeam": "Nueva Zelanda",
+    "awayTeam": "Belgica",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 66,
+    "grupo": "G",
+    "homeTeam": "Egipto",
+    "awayTeam": "Iran",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 67,
+    "grupo": "L",
+    "homeTeam": "Panama",
+    "awayTeam": "Inglaterra",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 68,
+    "grupo": "L",
+    "homeTeam": "Croacia",
+    "awayTeam": "Ghana",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 69,
+    "grupo": "K",
+    "homeTeam": "Colombia",
+    "awayTeam": "Portugal",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 70,
+    "grupo": "K",
+    "homeTeam": "RD Congo",
+    "awayTeam": "Uzbekistan",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  },
+  {
+    "id": 71,
+    "grupo": "J",
+    "homeTeam": "Argelia",
+    "awayTeam": "Austria",
+    "resultado": {
+      "home": 1,
+      "away": 2
+    }
+  },
+  {
+    "id": 72,
+    "grupo": "J",
+    "homeTeam": "Jordania",
+    "awayTeam": "Argentina",
+    "resultado": {
+      "home": 2,
+      "away": 1
+    }
+  }
+]

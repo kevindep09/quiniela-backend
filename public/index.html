@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        Quiniela Mundial 2026
+    </title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<!-- ⚙️ ADMIN -->
+<a href="admin.html" id="adminBtn">
+
+    <button>
+        ⚙️ Panel Admin
+    </button>
+
+</a>
+
+<!-- 🚪 LOGOUT -->
+<button id="logoutBtn">
+    🚪 Cerrar Sesión
+</button>
+
+<h1>
+    🏆 Quiniela Mundial 2026
+</h1>
+
+<!-- ===================== -->
+<!-- 🏆 RANKING -->
+<!-- ===================== -->
+
+<h2>
+    🏆 Ranking General
+</h2>
+
+<table>
+
+    <thead>
+
+        <tr>
+
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Puntos</th>
+            <th>Acción</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody id="ranking"></tbody>
+
+</table>
+
+<!-- ===================== -->
+<!-- 🌍 TABLA GRUPOS -->
+<!-- ===================== -->
+
+<h2>
+    🌍 Tabla de Grupos
+</h2>
+
+<div id="gruposContainer"></div>
+
+<!-- ===================== -->
+<!-- ⚽ APUESTAS -->
+<!-- ===================== -->
+
+<h2>
+    Haz tu predicción
+</h2>
+
+<form id="formApuesta">
+
+    <select id="matchId"></select>
+
+    <input
+        type="number"
+        id="home"
+        placeholder="Goles local"
+        required
+    >
+
+    <input
+        type="number"
+        id="away"
+        placeholder="Goles visitante"
+        required
+    >
+
+    <button type="submit">
+        Apostar ⚽
+    </button>
+
+</form>
+
+<!-- ===================== -->
+<!-- 📊 TABLA -->
+<!-- ===================== -->
+
+<h2>
+    📊 Historial de Predicciones
+</h2>
+
+<table>
+
+    <thead>
+
+        <tr>
+
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Partido</th>
+            <th>Predicción</th>
+            <th>Resultado</th>
+            <th>Puntos</th>
+            <th>Estado</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody id="tabla"></tbody>
+
+</table>
+
+<!-- ===================== -->
+<!-- 🏆 LLAVES -->
+<!-- ===================== -->
+
+<h2 class="titulo-llaves">
+    🏆 Llaves del Mundial
+</h2>
+
+<div class="bracket-wrapper">
+
+    <div class="bracket">
+
+        <div class="round">
+
+            <div class="round-title">
+                32avos
+            </div>
+
+            <div id="treintaidos"></div>
+
+        </div>
+
+        <div class="round">
+
+            <div class="round-title">
+                Octavos
+            </div>
+
+            <div id="octavos"></div>
+
+        </div>
+
+        <div class="round">
+
+            <div class="round-title">
+                Cuartos
+            </div>
+
+            <div id="cuartos"></div>
+
+        </div>
+
+        <div class="round">
+
+            <div class="round-title">
+                Semifinal
+            </div>
+
+            <div id="semis"></div>
+
+        </div>
+
+        <div class="round">
+
+            <div class="round-title">
+                Final
+            </div>
+
+            <div id="final"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ===================== -->
+<!-- 🌍 TEMPLATE GRUPOS -->
+<!-- ===================== -->
+
+<template id="grupoTemplate">
+
+    <div class="grupo-card">
+
+        <h3 class="grupo-titulo"></h3>
+
+        <table class="grupo-tabla">
+
+            <thead>
+
+                <tr>
+
+                    <th>Equipo</th>
+                    <th>PJ</th>
+                    <th>PG</th>
+                    <th>PE</th>
+                    <th>PP</th>
+                    <th>GF</th>
+                    <th>GC</th>
+                    <th>DG</th>
+                    <th>PTS</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody class="grupo-body"></tbody>
+
+        </table>
+
+    </div>
+
+</template>
+
+<script src="script.js"></script>
+<script src="brackets.js"></script>
+
+</body>
+</html>
