@@ -55,7 +55,7 @@ app.get('/test-db', async (req, res) => {
 
 
 
-const PORT = process.env.PORT || 3000;
+
 
 // ======================================================
 // MIDDLEWARE
