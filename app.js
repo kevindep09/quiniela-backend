@@ -1,139 +1,95 @@
-const express = require('express');
-const db = require("./db");
-const fs = require('fs');
-const session = require('express-session');
-const bcrypt = require("bcrypt");
-const jwt = require('jsonwebtoken');
-const verificarToken =
-require('./middleware/auth');
 require('dotenv').config();
+console.log(process.env.SESSION_SECRET);
+const express = require('express');
+const session = require('express-session');
+const bcrypt = require('bcrypt');
+const path = require('path');
+
+const pool = require('./db');
 
 const app = express();
-app.use(express.json());
-const PORT = 3000;
-app.get("/usuarios", (req, res) => {
-  db.query("SELECT * FROM usuarios", (err, results) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send("Error en MySQL");
-    } else {
-      res.json(results);
+
+
+app.get('/test-db', async (req, res) => {
+
+    try {
+
+        const [matches] =
+            await pool.query(
+                'SELECT * FROM matches'
+            );
+
+        const [users] =
+            await pool.query(
+                'SELECT * FROM users'
+            );
+
+        res.json({
+
+            matches,
+            users
+
+        });
+
     }
-  });
+
+    catch (error) {
+
+        console.log(error);
+
+        res.json(error);
+
+    }
+
 });
 
-// =======================
-// 🔧 MIDDLEWARES
-// =======================
+
+
+const PORT = process.env.PORT || 3000;
+
+// ======================================================
+// MIDDLEWARE
+// ======================================================
 
 app.use(express.json());
+
+app.use(express.urlencoded({
+    extended: true
+}));
+
+app.use(express.static(
+    path.join(__dirname, 'public')
+));
 
 app.use(session({
 
-    secret: 'quiniela-secreta',
+    secret: process.env.SESSION_SECRET,
 
     resave: false,
 
     saveUninitialized: false,
 
     cookie: {
+
         secure: false,
+
         httpOnly: true,
-        sameSite: 'lax'
+
+        maxAge: 1000 * 60 * 60 * 24 * 7
+
     }
 
 }));
 
-app.use(express.static('public'));
+// ======================================================
+// HELPERS
+// ======================================================
 
-app.use((req, res, next) => {
+function verificarToken(req, res, next) {
 
-    res.setHeader('Cache-Control', 'no-store');
-
-    next();
-
-});
-
-// =======================
-// 📂 LEER JSON
-// =======================
-
-function leerJSON(ruta) {
-
-    try {
-
-        return JSON.parse(
-            fs.readFileSync(ruta, 'utf8')
-        );
-
-    } catch {
-
-        return [];
-
-    }
-
-}
-
-// =======================
-// 💾 GUARDAR JSON
-// =======================
-
-function guardarJSON(ruta, data) {
-
-    fs.writeFileSync(
-        ruta,
-        JSON.stringify(data, null, 2)
-    );
-
-}
-
-// =======================
-// 🔢 OBTENER NUEVO ID
-// =======================
-
-function obtenerNuevoId(lista) {
-
-    if (!lista.length) return 1;
-
-    return Math.max(
-        ...lista.map(i => Number(i.id) || 0)
-    ) + 1;
-
-}
-
-// =======================
-// 🔐 VERIFICAR LOGIN
-// =======================
-
-function verificarLogin(req, res, next) {
-
-    if (!req.session.user) {
+    if (!req.session.usuario) {
 
         return res.status(401).json({
-
-            ok: false,
-            mensaje: 'No autenticado'
-
-        });
-
-    }
-
-    next();
-
-}
-
-// =======================
-// 🔐 SOLO ADMIN
-// =======================
-
-function soloAdmin(req, res, next) {
-
-    if (
-        !req.session.user ||
-        req.session.user.rol !== 'admin'
-    ) {
-
-        return res.status(403).json({
 
             ok: false,
             mensaje: 'No autorizado'
@@ -146,581 +102,1469 @@ function soloAdmin(req, res, next) {
 
 }
 
-// =======================
-// 🧮 CALCULAR TABLA
-// =======================
+function soloAdmin(req, res, next) {
 
-function calcularGrupos() {
+    if (
+        !req.session.usuario ||
+        req.session.usuario.rol !== 'admin'
+    ) {
 
-    const matches =
-        leerJSON('./data/matches.json');
+        return res.status(403).json({
 
-    let grupos = {};
-
-    matches.forEach(m => {
-
-        if (!m.grupo) return;
-
-        if (!grupos[m.grupo]) {
-
-            grupos[m.grupo] = {};
-
-        }
-
-        if (!grupos[m.grupo][m.homeTeam]) {
-
-            grupos[m.grupo][m.homeTeam] = {
-
-                equipo: m.homeTeam,
-                grupo: m.grupo,
-                pts: 0,
-                gf: 0,
-                gc: 0,
-                dg: 0
-
-            };
-
-        }
-
-        if (!grupos[m.grupo][m.awayTeam]) {
-
-            grupos[m.grupo][m.awayTeam] = {
-
-                equipo: m.awayTeam,
-                grupo: m.grupo,
-                pts: 0,
-                gf: 0,
-                gc: 0,
-                dg: 0
-
-            };
-
-        }
-
-        if (
-            m.resultado.home === null ||
-            m.resultado.away === null
-        ) return;
-
-        const home =
-            grupos[m.grupo][m.homeTeam];
-
-        const away =
-            grupos[m.grupo][m.awayTeam];
-
-        home.gf += m.resultado.home;
-        home.gc += m.resultado.away;
-
-        away.gf += m.resultado.away;
-        away.gc += m.resultado.home;
-
-        home.dg = home.gf - home.gc;
-        away.dg = away.gf - away.gc;
-
-        if (m.resultado.home > m.resultado.away) {
-
-            home.pts += 3;
-
-        }
-
-        else if (m.resultado.home < m.resultado.away) {
-
-            away.pts += 3;
-
-        }
-
-        else {
-
-            home.pts += 1;
-            away.pts += 1;
-
-        }
-
-    });
-
-    return grupos;
-
-}
-
-// =======================
-// 🔐 LOGIN
-// =======================
-
-app.post('/login', (req, res) => {
-
-    const { nombre, password } = req.body;
-
-    db.query(
-        'SELECT * FROM usuarios WHERE usuario = ?',
-        [nombre],
-        async (err, results) => {
-
-            if (err) {
-
-                return res.json({
-                    ok: false,
-                    mensaje: 'Error MySQL'
-                });
-
-            }
-
-            if (results.length === 0) {
-
-                return res.json({
-                    ok: false,
-                    mensaje: 'Usuario no encontrado'
-                });
-
-            }
-
-            const usuario = results[0];
-
-            const passwordCorrecta =
-                await bcrypt.compare(
-                    password,
-                    usuario.password
-                );
-
-            if (!passwordCorrecta) {
-
-                return res.json({
-                    ok: false,
-                    mensaje: 'Password incorrecta'
-                });
-
-            }
-
-            const token = jwt.sign(
-
-                {
-                    id: usuario.id,
-                    usuario: usuario.usuario,
-                    rol: usuario.rol
-                },
-
-                process.env.JWT_SECRET,
-
-                {
-                    expiresIn: '7d'
-                }
-
-            );
-
-            res.json({
-
-                ok: true,
-                mensaje: 'Login correcto ✅',
-                token
-
-            });
-
-        }
-    );
-
-});
-
-app.get(
-    '/perfil',
-    verificarToken,
-    (req, res) => {
-
-        res.json({
-
-            ok: true,
-            mensaje: 'Ruta privada ✅',
-
-            usuario: req.usuario
+            ok: false,
+            mensaje: 'Solo admin'
 
         });
 
     }
-);
-// =======================
-// 👤 SESSION
-// =======================
+
+    next();
+
+}
+
+// ======================================================
+// HOME
+// ======================================================
+
+app.get('/', (req, res) => {
+
+    res.sendFile(
+        path.join(__dirname, 'public', 'login.html')
+    );
+
+});
+
+// ======================================================
+// SESSION
+// ======================================================
 
 app.get('/session', (req, res) => {
 
+    if (!req.session.usuario) {
+
+        return res.json({
+
+            ok: false,
+            user: null
+
+        });
+
+    }
+
     res.json({
 
-        user: req.session.user || null
+        ok: true,
+        user: req.session.usuario
 
     });
 
 });
 
-// =======================
-// 🚪 LOGOUT
-// =======================
+// ======================================================
+// REGISTER
+// ======================================================
+
+app.post('/register', async (req, res) => {
+
+    try {
+
+        let { nombre, password } = req.body;
+
+        nombre = nombre.trim();
+        password = password.trim();
+
+        const [existe] = await pool.query(
+
+            'SELECT * FROM users WHERE nombre=?',
+
+            [nombre]
+
+        );
+
+        if (existe.length > 0) {
+
+            return res.json({
+
+                ok: false,
+                mensaje: 'Usuario ya existe'
+
+            });
+
+        }
+
+        const hash =
+            await bcrypt.hash(password, 10);
+
+        const [cantidad] =
+            await pool.query(
+                'SELECT COUNT(*) as total FROM users'
+            );
+
+        const rol =
+            cantidad[0].total === 0
+                ? 'admin'
+                : 'usuario';
+
+        await pool.query(
+
+    `INSERT INTO users
+    (
+        nombre,
+        password,
+        rol,
+        puntos,
+        activo
+    )
+    VALUES(?,?,?,?,?)`,
+
+    [
+        nombre,
+        hash,
+        rol,
+        0,
+        rol === 'admin' ? 1 : 0
+    ]
+
+);
+
+        res.json({
+
+            ok: true,
+            mensaje: 'Usuario creado'
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            ok: false,
+            mensaje: 'Error register'
+
+        });
+
+    }
+
+});
+
+// ======================================================
+// LOGIN
+// ======================================================
+
+app.post('/login', async (req, res) => {
+
+    try {
+
+        let { nombre, password } = req.body;
+
+        nombre = nombre.trim();
+        password = password.trim();
+
+        const [rows] = await pool.query(
+
+            'SELECT * FROM users WHERE nombre=?',
+
+            [nombre]
+
+        );
+
+        if (rows.length === 0) {
+
+            return res.json({
+
+                ok: false,
+                mensaje: 'Usuario no encontrado'
+
+            });
+
+        }
+
+        const user = rows[0];
+        if (!user.activo) {
+
+    return res.json({
+
+        ok: false,
+
+        mensaje:
+            'Tu cuenta está pendiente de aprobación'
+
+    });
+
+}
+
+        const valido =
+            await bcrypt.compare(
+                password,
+                user.password
+            );
+
+        if (!valido) {
+
+            return res.json({
+
+                ok: false,
+                mensaje: 'Contraseña incorrecta'
+
+            });
+
+        }
+
+        req.session.usuario = {
+
+            id: user.id,
+
+            nombre: user.nombre,
+
+            rol: user.rol
+
+        };
+
+        req.session.save(err => {
+
+            if (err) {
+
+                console.log(err);
+
+                return res.status(500).json({
+
+                    ok: false,
+                    mensaje: 'Error sesión'
+
+                });
+
+            }
+
+            return res.json({
+
+                ok: true,
+
+                mensaje: 'Login correcto',
+
+                usuario: req.session.usuario
+
+            });
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            ok: false,
+            mensaje: 'Error login'
+
+        });
+
+    }
+
+});
+
+// ======================================================
+// LOGOUT
+// ======================================================
 
 app.post('/logout', (req, res) => {
 
     req.session.destroy(() => {
 
+        res.clearCookie('connect.sid');
+
         res.json({
-            ok: true
+
+            ok: true,
+            mensaje: 'Logout correcto'
+
         });
 
     });
 
 });
 
-// =======================
+// ======================================================
+// MATCHES
+// ======================================================
+
+// ======================================================
 // ⚽ MATCHES
-// =======================
+// ======================================================
 
-app.get('/matches', verificarLogin, (req, res) => {
-
-    let matches =
-        leerJSON('./data/matches.json');
-
-    matches.sort((a, b) => {
-
-        if (a.grupo < b.grupo) return -1;
-        if (a.grupo > b.grupo) return 1;
-
-        const fechaA =
-            new Date(`${a.fecha || ''} ${a.hora || ''}`);
-
-        const fechaB =
-            new Date(`${b.fecha || ''} ${b.hora || ''}`);
-
-        return fechaA - fechaB;
-
-    });
-
-    res.json(matches);
-
-});
-
-// =======================
-// 🌍 GRUPOS
-// =======================
-
-app.get('/grupos', verificarLogin, (req, res) => {
-
-    const matches =
-        leerJSON('./data/matches.json');
-
-    let grupos = {};
-
-    matches.forEach(m => {
-
-        if (!m.grupo) return;
-
-        if (!grupos[m.grupo]) {
-
-            grupos[m.grupo] = {};
-
-        }
-
-        // CREAR EQUIPO LOCAL
-        if (!grupos[m.grupo][m.homeTeam]) {
-
-            grupos[m.grupo][m.homeTeam] = {
-
-                equipo: m.homeTeam,
-
-                pj: 0,
-                pg: 0,
-                pe: 0,
-                pp: 0,
-
-                gf: 0,
-                gc: 0,
-                dg: 0,
-
-                pts: 0
-
-            };
-
-        }
-
-        // CREAR EQUIPO VISITANTE
-        if (!grupos[m.grupo][m.awayTeam]) {
-
-            grupos[m.grupo][m.awayTeam] = {
-
-                equipo: m.awayTeam,
-
-                pj: 0,
-                pg: 0,
-                pe: 0,
-                pp: 0,
-
-                gf: 0,
-                gc: 0,
-                dg: 0,
-
-                pts: 0
-
-            };
-
-        }
-
-        // IGNORAR SI NO HAY RESULTADO
-        if (
-            m.resultado.home === null ||
-            m.resultado.away === null
-        ) return;
-
-        const home =
-            grupos[m.grupo][m.homeTeam];
-
-        const away =
-            grupos[m.grupo][m.awayTeam];
-
-        // PARTIDOS JUGADOS
-        home.pj++;
-        away.pj++;
-
-        // GOLES
-        home.gf += Number(m.resultado.home);
-        home.gc += Number(m.resultado.away);
-
-        away.gf += Number(m.resultado.away);
-        away.gc += Number(m.resultado.home);
-
-        // DIFERENCIA
-        home.dg = home.gf - home.gc;
-        away.dg = away.gf - away.gc;
-
-        // GANADOS / EMPATADOS / PERDIDOS
-        if (m.resultado.home > m.resultado.away) {
-
-            home.pg++;
-            away.pp++;
-
-            home.pts += 3;
-
-        }
-
-        else if (m.resultado.home < m.resultado.away) {
-
-            away.pg++;
-            home.pp++;
-
-            away.pts += 3;
-
-        }
-
-        else {
-
-            home.pe++;
-            away.pe++;
-
-            home.pts += 1;
-            away.pts += 1;
-
-        }
-
-    });
-
-    // ORDENAR TABLAS
-    const gruposOrdenados = {};
-
-    Object.keys(grupos)
-        .sort()
-        .forEach(g => {
-
-            gruposOrdenados[g] =
-                Object.values(grupos[g])
-                    .sort((a, b) => {
-
-                        return (
-
-                            b.pts - a.pts ||
-
-                            b.dg - a.dg ||
-
-                            b.gf - a.gf
-
-                        );
-
-                    });
-
-        });
-
-    res.json(gruposOrdenados);
-
-});
-
-// =======================
-// 📝 APOSTAR
-// =======================
-
-
-app.post('/apostar', verificarLogin, (req, res) => {
+app.get('/matches', verificarToken, async (req, res) => {
 
     try {
 
-        const {
-            matchId,
-            home,
-            away
-        } = req.body;
+        const [matches] =
+            await pool.query(
 
-        let predictions =
-            leerJSON('./data/predictions.json');
+                `SELECT *
+                FROM matches
+                ORDER BY fecha ASC, hora ASC`
 
-        let matches =
-            leerJSON('./data/matches.json');
-
-        const partido = matches.find(
-            m => m.id === parseInt(matchId)
-        );
-
-        // ❌ Partido no existe
-        if (!partido) {
-
-            return res.json({
-
-                ok: false,
-                mensaje: 'Partido no encontrado'
-
-            });
-
-        }
-
-        // =======================
-        // ⛔ BLOQUEAR APUESTAS
-        // 15 MIN ANTES
-        // =======================
-
-        if (
-            partido.fecha &&
-            partido.hora
-        ) {
-
-            const fechaPartido =
-                new Date(
-                    `${partido.fecha}T${partido.hora}:00`
-                );
-
-            // cerrar 15 minutos antes
-            fechaPartido.setMinutes(
-                fechaPartido.getMinutes() - 15
             );
 
-            const ahora =
-                new Date();
+        res.json(matches);
 
-            if (ahora >= fechaPartido) {
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            ok: false,
+            mensaje: 'Error cargando partidos'
+
+        });
+
+    }
+
+});
+
+
+
+// ======================================================
+// 🏆 BRACKETS
+// ======================================================
+
+app.get('/brackets', verificarToken, async (req, res) => {
+
+    try {
+
+        const [brackets] =
+            await pool.query(
+
+                `SELECT *
+                FROM brackets
+                ORDER BY id ASC`
+
+            );
+
+        res.json(brackets);
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            ok: false,
+            mensaje: 'Error brackets'
+
+        });
+
+    }
+
+});
+
+// ======================================================
+// ✅ ACTIVAR / BLOQUEAR USUARIO
+// ======================================================
+
+app.post(
+    '/toggle-usuario',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
+
+        try {
+
+            const { id } = req.body;
+
+            const [rows] =
+                await pool.query(
+
+                    `SELECT activo
+                     FROM users
+                     WHERE id=?`,
+
+                    [id]
+
+                );
+
+            if (rows.length === 0) {
 
                 return res.json({
 
                     ok: false,
 
                     mensaje:
-                        '⛔ Las apuestas para este partido ya fueron cerradas'
+                        'Usuario no existe'
 
                 });
 
             }
 
-        }
+            const nuevoEstado =
+                rows[0].activo ? 0 : 1;
 
-        // =======================
-        // 🔍 VALIDAR GOLES
-        // =======================
+            await pool.query(
 
-        const golesHome =
-            parseInt(home);
+                `UPDATE users
+                 SET activo=?
+                 WHERE id=?`,
 
-        const golesAway =
-            parseInt(away);
+                [
+                    nuevoEstado,
+                    id
+                ]
 
-        if (
-            isNaN(golesHome) ||
-            isNaN(golesAway)
-        ) {
-
-            return res.json({
-
-                ok: false,
-
-                mensaje:
-                    'Debes ingresar goles válidos'
-
-            });
-
-        }
-
-        // =======================
-        // ✏️ ACTUALIZAR APUESTA
-        // =======================
-
-        const existe = predictions.find(
-
-            p =>
-
-                p.userId === req.session.user.id
-
-                &&
-
-                p.matchId === parseInt(matchId)
-
-        );
-
-        if (existe) {
-
-            existe.resultado = {
-
-                home: golesHome,
-                away: golesAway
-
-            };
-
-            guardarJSON(
-                './data/predictions.json',
-                predictions
             );
 
-            return res.json({
+            res.json({
 
                 ok: true,
 
                 mensaje:
-                    'Apuesta actualizada ✏️'
+                    nuevoEstado
+                        ? 'Usuario aprobado'
+                        : 'Usuario bloqueado'
 
             });
 
         }
 
-        // =======================
-        // ✅ NUEVA APUESTA
-        // =======================
+        catch (error) {
 
-        predictions.push({
+            console.log(error);
 
-            userId:
-                req.session.user.id,
+            res.status(500).json({
 
-            matchId:
-                parseInt(matchId),
+                ok: false,
 
-            resultado: {
+                mensaje:
+                    'Error usuario'
 
-                home: golesHome,
-                away: golesAway
+            });
+
+        }
+
+    }
+);
+
+
+// ======================================================
+// 🏆 GUARDAR GANADOR BRACKET
+// ======================================================
+
+// ======================================================
+// 🏆 RESULTADO BRACKET
+// ======================================================
+
+app.post(
+    '/resultado-bracket',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
+
+        try {
+
+            const {
+                id,
+                ganador
+            } = req.body;
+
+            // =========================
+            // GUARDAR GANADOR REAL
+            // =========================
+
+            await pool.query(
+
+                `UPDATE brackets
+                SET ganador=?
+                WHERE id=?`,
+
+                [
+                    ganador,
+                    id
+                ]
+
+            );
+
+            // =========================
+            // OBTENER APUESTAS
+            // =========================
+
+            const [apuestas] =
+                await pool.query(
+
+                    `SELECT *
+                     FROM bracket_apuestas
+                     WHERE bracketId=?`,
+
+                    [id]
+
+                );
+
+            // =========================
+            // RECALCULAR PUNTOS
+            // =========================
+
+            for (const a of apuestas) {
+
+                let puntos = 0;
+
+                // ✅ SI ACIERTA GANADOR
+                if (a.ganador === ganador) {
+
+                    puntos = 5;
+
+                }
+
+                await pool.query(
+
+                    `UPDATE bracket_apuestas
+                     SET puntos=?
+                     WHERE id=?`,
+
+                    [
+                        puntos,
+                        a.id
+                    ]
+
+                );
+
+            }
+
+            // =========================
+            // RECALCULAR RANKING GENERAL
+            // =========================
+
+            const [users] =
+                await pool.query(
+
+                    `SELECT id
+                     FROM users`
+
+                );
+
+            for (const u of users) {
+
+                // puntos normales
+                const [normal] =
+                    await pool.query(
+
+                        `SELECT
+                         COALESCE(
+                            SUM(puntos),
+                            0
+                         ) AS total
+                         FROM apuestas
+                         WHERE userId=?`,
+
+                        [u.id]
+
+                    );
+
+                // puntos brackets
+                const [brackets] =
+                    await pool.query(
+
+                        `SELECT
+                         COALESCE(
+                            SUM(puntos),
+                            0
+                         ) AS total
+                         FROM bracket_apuestas
+                         WHERE userId=?`,
+
+                        [u.id]
+
+                    );
+
+                // total general
+                const total =
+                    normal[0].total +
+                    brackets[0].total;
+
+                await pool.query(
+
+                    `UPDATE users
+                     SET puntos=?
+                     WHERE id=?`,
+
+                    [
+                        total,
+                        u.id
+                    ]
+
+                );
+
+            }
+
+            res.json({
+
+                ok: true,
+                mensaje: 'Ganador guardado'
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+                mensaje: 'Error bracket'
+
+            });
+
+        }
+
+    }
+);
+
+
+// ======================================================
+// 🏆 APOSTAR BRACKET
+// ======================================================
+
+app.post(
+    '/apostar-bracket',
+    verificarToken,
+    async (req, res) => {
+
+        try {
+
+            const {
+                bracketId,
+                ganador
+            } = req.body;
+
+            const userId =
+                req.session.usuario.id;
+
+            // verificar si ya apostó
+            const [existe] =
+                await pool.query(
+
+                    `SELECT *
+                     FROM bracket_apuestas
+                     WHERE userId=? AND bracketId=?`,
+
+                    [userId, bracketId]
+
+                );
+
+            if (existe.length > 0) {
+
+                await pool.query(
+
+                    `UPDATE bracket_apuestas
+                     SET ganador=?
+                     WHERE userId=? AND bracketId=?`,
+
+                    [
+                        ganador,
+                        userId,
+                        bracketId
+                    ]
+
+                );
+
+            }
+
+            else {
+
+                await pool.query(
+
+                    `INSERT INTO bracket_apuestas
+                    (
+                        userId,
+                        bracketId,
+                        ganador
+                    )
+                    VALUES(?,?,?)`,
+
+                    [
+                        userId,
+                        bracketId,
+                        ganador
+                    ]
+
+                );
+
+            }
+
+            res.json({
+
+                ok: true,
+                mensaje: 'Predicción guardada'
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+                mensaje: 'Error apuesta bracket'
+
+            });
+
+        }
+
+    }
+);
+
+
+
+// ======================================================
+// CREAR PARTIDO
+// ======================================================
+
+app.post(
+    '/crear-partido',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
+
+        try {
+
+            const {
+                grupo,
+                homeTeam,
+                awayTeam,
+                fecha,
+                hora
+            } = req.body;
+
+            await pool.query(
+
+                `INSERT INTO matches
+                (grupo,homeTeam,awayTeam,fecha,hora)
+                VALUES(?,?,?,?,?)`,
+
+                [
+                    grupo,
+                    homeTeam,
+                    awayTeam,
+                    fecha,
+                    hora
+                ]
+
+            );
+
+            res.json({
+
+                ok: true,
+                mensaje: 'Partido creado'
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+                mensaje: 'Error crear partido'
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// RESULTADO
+// ======================================================
+
+app.post(
+    '/resultado',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
+
+        try {
+
+            const {
+                matchId,
+                home,
+                away
+            } = req.body;
+
+            await pool.query(
+
+                `UPDATE matches
+                SET
+                homeResult=?,
+                awayResult=?
+                WHERE id=?`,
+
+                [
+                    Number(home),
+                    Number(away),
+                    Number(matchId)
+                ]
+
+            );
+
+            // =========================
+            // RECALCULAR APUESTAS
+            // =========================
+
+            const [apuestas] =
+                await pool.query(
+
+                    `SELECT *
+                    FROM apuestas
+                    WHERE matchId=?`,
+
+                    [matchId]
+
+                );
+
+            for (const a of apuestas) {
+
+                let puntos = 0;
+
+                let estado = 'fallo';
+
+                // ✅ RESULTADO EXACTO
+
+                if (
+
+                    Number(a.home) === Number(home) &&
+                    Number(a.away) === Number(away)
+
+                ) {
+
+                    puntos = 5;
+
+                    estado = 'exacto';
+
+                }
+
+                else {
+
+                    // ✅ GANADOR
+
+                    const prediccion =
+
+                        Number(a.home) >
+                        Number(a.away)
+
+                            ? 'L'
+
+                            : Number(a.home) <
+                              Number(a.away)
+
+                                ? 'V'
+
+                                : 'E';
+
+                    const real =
+
+                        Number(home) >
+                        Number(away)
+
+                            ? 'L'
+
+                            : Number(home) <
+                              Number(away)
+
+                                ? 'V'
+
+                                : 'E';
+
+                    if (prediccion === real) {
+
+                        puntos = 3;
+
+                        estado = 'ganador';
+
+                    }
+
+                }
+
+                await pool.query(
+
+                    `UPDATE apuestas
+                    SET
+                    puntos=?,
+                    estado=?
+                    WHERE id=?`,
+
+                    [
+                        puntos,
+                        estado,
+                        a.id
+                    ]
+
+                );
+
+            }
+
+            // =========================
+            // RECALCULAR RANKING
+            // =========================
+
+            const [users] =
+                await pool.query(
+
+                    `SELECT id
+                    FROM users`
+
+                );
+
+            for (const u of users) {
+
+                const [total] =
+                    await pool.query(
+
+                        `SELECT
+                        COALESCE(SUM(puntos),0)
+                        AS total
+                        FROM apuestas
+                        WHERE userId=?`,
+
+                        [u.id]
+
+                    );
+
+                await pool.query(
+
+                    `UPDATE users
+                    SET puntos=?
+                    WHERE id=?`,
+
+                    [
+                        total[0].total,
+                        u.id
+                    ]
+
+                );
+
+            }
+
+            res.json({
+
+                ok: true,
+                mensaje: 'Resultado guardado'
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+                mensaje: 'Error resultado'
+
+            });
+
+        }
+
+    }
+);
+// EDITAR PARTIDO //
+
+// ======================================================
+// 💾 EDITAR PARTIDO
+// ======================================================
+
+app.post(
+    '/editar-partido',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
+
+        try {
+
+            const {
+                id,
+                fecha,
+                hora
+            } = req.body;
+
+            await pool.query(
+
+                `UPDATE matches
+                SET fecha = ?, hora = ?
+                WHERE id = ?`,
+
+                [fecha, hora, id]
+
+            );
+
+            res.json({
+
+                ok: true,
+                mensaje: 'Fecha actualizada'
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+                mensaje: 'Error editar partido'
+
+            });
+
+        }
+
+    }
+);
+
+// ======================================================
+// ⚽ APOSTAR
+// ======================================================
+
+app.post(
+    '/apostar',
+    verificarToken,
+    async (req, res) => {
+
+        try {
+
+            const {
+                matchId,
+                home,
+                away
+            } = req.body;
+
+            const userId =
+                req.session.usuario.id;
+
+            // =========================
+            // OBTENER PARTIDO
+            // =========================
+
+            const [matches] =
+                await pool.query(
+
+                    `SELECT *
+                     FROM matches
+                     WHERE id=?`,
+
+                    [matchId]
+
+                );
+
+            if (matches.length === 0) {
+
+                return res.json({
+
+                    ok: false,
+                    mensaje: 'Partido no existe'
+
+                });
+
+            }
+
+            const match =
+                matches[0];
+
+            // =========================
+            // 🚫 SI YA TIENE RESULTADO
+            // =========================
+
+            if (
+   match.homeResult !== null &&
+    match.awayResult !== null
+
+            ) {
+
+                return res.json({
+
+                    ok: false,
+
+                    mensaje:
+                        'Las apuestas están cerradas'
+
+                });
+
+            }
+
+            // =========================
+            // ⏰ VALIDAR CIERRE
+            // =========================
+
+            if (
+                match.fecha &&
+                match.hora
+            ) {
+
+                const limite =
+                    new Date(
+
+                        `${match.fecha}T${match.hora}`
+
+                    );
+
+                // CERRAR 15 MIN ANTES
+
+                limite.setMinutes(
+                    limite.getMinutes() - 15
+                );
+
+                if (new Date() > limite) {
+
+                    return res.json({
+
+                        ok: false,
+
+                        mensaje:
+                            'Las apuestas están cerradas'
+
+                    });
+
+                }
+
+            }
+
+            // =========================
+            // VERIFICAR SI YA EXISTE
+            // =========================
+
+            const [existe] =
+                await pool.query(
+
+                    `SELECT *
+                     FROM apuestas
+                     WHERE userId=? AND matchId=?`,
+
+                    [
+                        userId,
+                        matchId
+                    ]
+
+                );
+
+            // =========================
+            // UPDATE
+            // =========================
+
+            if (existe.length > 0) {
+
+                await pool.query(
+
+                    `UPDATE apuestas
+                     SET
+                     home=?,
+                     away=?
+                     WHERE userId=? AND matchId=?`,
+
+                    [
+                        home,
+                        away,
+                        userId,
+                        matchId
+                    ]
+
+                );
+
+            }
+
+            // =========================
+            // INSERT
+            // =========================
+
+            else {
+
+                await pool.query(
+
+                    `INSERT INTO apuestas
+                    (
+                        userId,
+                        matchId,
+                        home,
+                        away,
+                        puntos,
+                        estado
+                    )
+                    VALUES(?,?,?,?,?,?)`,
+
+                    [
+                        userId,
+                        matchId,
+                        home,
+                        away,
+                        0,
+                        'pendiente'
+                    ]
+
+                );
+
+            }
+
+            res.json({
+
+                ok: true,
+                mensaje: 'Apuesta guardada'
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+                mensaje: 'Error apuesta'
+
+            });
+
+        }
+
+    }
+);
+
+
+
+// ======================================================
+// 📊 TABLA PREDICCIONES
+// ======================================================
+
+app.get(
+    '/tabla',
+    verificarToken,
+    async (req, res) => {
+
+        try {
+
+            const [rows] =
+                await pool.query(
+
+                    `SELECT
+
+                        apuestas.id,
+
+                        users.nombre,
+
+                        CONCAT(
+                            matches.homeTeam,
+                            ' vs ',
+                            matches.awayTeam
+                        ) AS partido,
+
+                        CONCAT(
+                            apuestas.home,
+                            ' - ',
+                            apuestas.away
+                        ) AS prediccion,
+
+                        CASE
+
+                            WHEN matches.homeResult IS NULL
+
+                            THEN 'Pendiente'
+
+                            ELSE CONCAT(
+                                matches.homeResult,
+                                ' - ',
+                                matches.awayResult
+                            )
+
+                        END AS resultadoReal,
+
+                        apuestas.puntos,
+
+                        apuestas.estado
+
+                    FROM apuestas
+
+                    INNER JOIN users
+                    ON users.id = apuestas.userId
+
+                    INNER JOIN matches
+                    ON matches.id = apuestas.matchId
+
+                    ORDER BY apuestas.id DESC`
+
+                );
+
+            res.json(rows);
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+
+                mensaje:
+                    'Error tabla'
+
+            });
+
+        }
+
+    }
+);
+
+
+
+// ======================================================
+// 🌍 TABLA DE GRUPOS
+// ======================================================
+
+app.get('/grupos', verificarToken, async (req, res) => {
+
+    try {
+
+        const [matches] =
+            await pool.query(
+
+                `SELECT *
+                FROM matches`
+
+            );
+
+        const grupos = {};
+
+        matches.forEach(m => {
+
+            if (!m.grupo) return;
+
+            if (
+                m.homeResult === null ||
+                m.awayResult === null
+            ) return;
+
+            if (!grupos[m.grupo]) {
+
+                grupos[m.grupo] = {};
+
+            }
+
+            [m.homeTeam, m.awayTeam]
+                .forEach(eq => {
+
+                    if (!grupos[m.grupo][eq]) {
+
+                        grupos[m.grupo][eq] = {
+
+                            equipo: eq,
+
+                            pj: 0,
+                            pg: 0,
+                            pe: 0,
+                            pp: 0,
+
+                            gf: 0,
+                            gc: 0,
+                            dg: 0,
+
+                            pts: 0
+
+                        };
+
+                    }
+
+                });
+
+            const home =
+                grupos[m.grupo][m.homeTeam];
+
+            const away =
+                grupos[m.grupo][m.awayTeam];
+
+            home.pj++;
+            away.pj++;
+
+            home.gf += m.homeResult;
+            home.gc += m.awayResult;
+
+            away.gf += m.awayResult;
+            away.gc += m.homeResult;
+
+            home.dg =
+                home.gf - home.gc;
+
+            away.dg =
+                away.gf - away.gc;
+
+            if (m.homeResult > m.awayResult) {
+
+                home.pg++;
+                away.pp++;
+
+                home.pts += 3;
+
+            }
+
+            else if (m.homeResult < m.awayResult) {
+
+                away.pg++;
+                home.pp++;
+
+                away.pts += 3;
+
+            }
+
+            else {
+
+                home.pe++;
+                away.pe++;
+
+                home.pts += 1;
+                away.pts += 1;
 
             }
 
         });
 
-        guardarJSON(
-            './data/predictions.json',
-            predictions
-        );
+        // ORDENAR
 
-        res.json({
+        Object.keys(grupos).forEach(g => {
 
-            ok: true,
+            grupos[g] =
+                Object.values(grupos[g])
 
-            mensaje:
-                'Apuesta guardada ✅'
+                .sort((a, b) => {
+
+                    if (b.pts !== a.pts)
+                        return b.pts - a.pts;
+
+                    if (b.dg !== a.dg)
+                        return b.dg - a.dg;
+
+                    return b.gf - a.gf;
+
+                });
 
         });
+
+        res.json(grupos);
 
     }
 
@@ -731,9 +1575,7 @@ app.post('/apostar', verificarLogin, (req, res) => {
         res.status(500).json({
 
             ok: false,
-
-            mensaje:
-                'Error guardando apuesta'
+            mensaje: 'Error grupos'
 
         });
 
@@ -741,248 +1583,32 @@ app.post('/apostar', verificarLogin, (req, res) => {
 
 });
 
-// =======================
-// 🛠 CREAR PARTIDO
-// =======================
+// CARGAR 32VOS //
 
-app.post('/crear-partido', soloAdmin, (req, res) => {
 
-    const {
-        grupo,
-        homeTeam,
-        awayTeam,
-        fecha,
-        hora
-    } = req.body;
 
-    let matches =
-        leerJSON('./data/matches.json');
 
-    matches.push({
+// ======================================================
+// 🏆 RANKING
+// ======================================================
 
-        id: obtenerNuevoId(matches),
-
-        grupo,
-        homeTeam,
-        awayTeam,
-        fecha,
-        hora,
-
-        resultado: {
-            home: null,
-            away: null
-        }
-
-    });
-
-    guardarJSON(
-        './data/matches.json',
-        matches
-    );
-
-    res.json({
-        mensaje: 'Partido creado ✅'
-    });
-
-});
-
-// =======================
-// 💾 GUARDAR RESULTADO
-// =======================
-
-app.post('/resultado', soloAdmin, (req, res) => {
-
-    const {
-        matchId,
-        home,
-        away
-    } = req.body;
-
-    let matches =
-        leerJSON('./data/matches.json');
-
-    const partido = matches.find(
-        m => m.id === parseInt(matchId)
-    );
-
-    if (!partido) {
-
-        return res.json({
-            mensaje: 'Partido no encontrado'
-        });
-
-    }
-
-    partido.resultado = {
-        home: parseInt(home),
-        away: parseInt(away)
-    };
-
-    guardarJSON(
-        './data/matches.json',
-        matches
-    );
-
-    res.json({
-        mensaje: 'Resultado guardado ✅'
-    });
-
-});
-
-// =======================
-// ✏️ EDITAR PARTIDO
-// =======================
-
-app.post('/editar-partido', soloAdmin, (req, res) => {
-
-    const {
-        id,
-        fecha,
-        hora
-    } = req.body;
-
-    let matches =
-        leerJSON('./data/matches.json');
-
-    let brackets =
-        leerJSON('./data/brackets.json');
-
-    const partido = matches.find(
-        m => m.id === parseInt(id)
-    );
-
-    const bracket = brackets.find(
-        b => b.id === parseInt(id)
-    );
-
-    if (partido) {
-
-        partido.fecha = fecha;
-        partido.hora = hora;
-
-        guardarJSON(
-            './data/matches.json',
-            matches
-        );
-
-        return res.json({
-            mensaje: 'Partido actualizado ✅'
-        });
-
-    }
-
-    if (bracket) {
-
-        bracket.fecha = fecha;
-        bracket.hora = hora;
-
-        guardarJSON(
-            './data/brackets.json',
-            brackets
-        );
-
-        return res.json({
-            mensaje: 'Llave actualizada ✅'
-        });
-
-    }
-
-    res.json({
-        mensaje: 'No encontrado'
-    });
-
-});
-
-// =======================
-// ❌ ELIMINAR PARTIDO
-// =======================
-
-app.delete('/eliminar-partido/:id', soloAdmin, (req, res) => {
-
-    let matches =
-        leerJSON('./data/matches.json');
-
-    const id =
-        parseInt(req.params.id);
-
-    matches = matches.filter(
-        m => m.id !== id
-    );
-
-    guardarJSON(
-        './data/matches.json',
-        matches
-    );
-
-    res.json({
-        mensaje: 'Partido eliminado ❌'
-    });
-
-});
-
-// =======================
-// 🏆 BRACKETS
-// =======================
-
-app.get('/brackets', verificarLogin, (req, res) => {
-
-    const brackets =
-        leerJSON('./data/brackets.json');
-
-    res.json(brackets);
-
-});
-
-// =======================
-// ➕ CREAR BRACKET
-// =======================
-
-app.post('/crear-bracket', soloAdmin, (req, res) => {
+app.get('/ranking', verificarToken, async (req, res) => {
 
     try {
 
-        const {
+        const [users] =
+            await pool.query(
 
-            fase,
-            equipo1,
-            equipo2,
-            fecha,
-            hora
+                `SELECT
+                id,
+                nombre,
+                puntos
+                FROM users
+                ORDER BY puntos DESC`
 
-        } = req.body;
+            );
 
-        let brackets =
-            leerJSON('./data/brackets.json');
-
-        const nuevo = {
-
-            id: obtenerNuevoId(brackets),
-
-            fase,
-
-            equipo1,
-            equipo2,
-
-            fecha,
-            hora,
-
-            ganador: null
-
-        };
-
-        brackets.push(nuevo);
-
-        guardarJSON(
-            './data/brackets.json',
-            brackets
-        );
-
-        res.json({
-
-            ok: true,
-            mensaje: 'Llave creada ✅'
-
-        });
+        res.json(users);
 
     }
 
@@ -993,7 +1619,7 @@ app.post('/crear-bracket', soloAdmin, (req, res) => {
         res.status(500).json({
 
             ok: false,
-            mensaje: 'Error creando llave'
+            mensaje: 'Error ranking'
 
         });
 
@@ -1001,540 +1627,1101 @@ app.post('/crear-bracket', soloAdmin, (req, res) => {
 
 });
 
-// =======================
-// 💾 RESULTADO BRACKET
-// =======================
 
-app.post('/resultado-bracket', soloAdmin, (req, res) => {
 
-    const {
-        id,
-        ganador
-    } = req.body;
 
-    let brackets =
-        leerJSON('./data/brackets.json');
+// ======================================================
+// 🏆 APOSTAR BRACKET
+// ======================================================
 
-    const bracket = brackets.find(
-        b => b.id === parseInt(id)
-    );
+app.post(
+    '/apostar-bracket',
+    verificarToken,
+    async (req, res) => {
 
-    if (!bracket) {
+        try {
 
-        return res.json({
-            mensaje: 'Llave no encontrada'
-        });
+            const {
+                bracketId,
+                ganador
+            } = req.body;
 
-    }
+            const userId =
+                req.session.usuario.id;
 
-    bracket.ganador = ganador;
+            // verificar si ya existe
+            const [existe] =
+                await pool.query(
 
-    guardarJSON(
-        './data/brackets.json',
-        brackets
-    );
+                    `SELECT *
+                     FROM bracket_apuestas
+                     WHERE userId=? AND bracketId=?`,
 
-    res.json({
-        mensaje: 'Ganador guardado ✅'
-    });
+                    [userId, bracketId]
 
-});
+                );
 
-// =======================
-// ❌ ELIMINAR BRACKET
-// =======================
+            if (existe.length > 0) {
 
-app.delete('/eliminar-bracket/:id', soloAdmin, (req, res) => {
+                await pool.query(
 
-    let brackets =
-        leerJSON('./data/brackets.json');
+                    `UPDATE bracket_apuestas
+                     SET ganador=?
+                     WHERE userId=? AND bracketId=?`,
 
-    const id =
-        parseInt(req.params.id);
+                    [
 
-    brackets = brackets.filter(
-        b => b.id !== id
-    );
+                        ganador,
+                        userId,
+                        bracketId
 
-    guardarJSON(
-        './data/brackets.json',
-        brackets
-    );
+                    ]
 
-    res.json({
-        mensaje: 'Llave eliminada ❌'
-    });
+                );
 
-});
+            } else {
 
-// =======================
-// 🏆 GENERAR 32AVOS
-// =======================
+                await pool.query(
 
-app.post('/generar-32avos', soloAdmin, (req, res) => {
+                    `INSERT INTO bracket_apuestas
+                    (
+                        userId,
+                        bracketId,
+                        ganador
+                    )
+                    VALUES(?,?,?)`,
 
-    try {
+                    [
 
-        let brackets =
-            leerJSON('./data/brackets.json');
+                        userId,
+                        bracketId,
+                        ganador
 
-        const existe = brackets.find(
-            b => b.fase === '32avos'
-        );
+                    ]
 
-        if (existe) {
+                );
 
-            return res.json({
-                mensaje: 'Los 32avos ya existen'
+            }
+
+            res.json({
+
+                ok:true,
+                mensaje:'Predicción guardada'
+
             });
 
         }
 
-        const grupos =
-            calcularGrupos();
+        catch(error){
 
-        let primeros = [];
-        let segundos = [];
-        let terceros = [];
+            console.log(error);
 
-        Object.keys(grupos)
-            .sort()
-            .forEach(g => {
+            res.status(500).json({
 
-                const tabla =
-                    Object.values(grupos[g])
-                    .sort((a, b) => {
+                ok:false,
+                mensaje:'Error apuesta bracket'
 
-                        return (
-                            b.pts - a.pts ||
-                            b.dg - a.dg ||
-                            b.gf - a.gf
-                        );
+            });
+
+        }
+
+    }
+);
+
+
+
+// GENERAR 32VOS //
+
+
+// ======================================================
+// 🏆 GENERAR 32AVOS
+// ======================================================
+
+app.post(
+    '/generar-32avos',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
+
+        try {
+
+            // =========================
+            // OBTENER PARTIDOS
+            // =========================
+
+            const [matches] =
+                await pool.query(
+
+                    `SELECT *
+                    FROM matches`
+
+                );
+
+            // =========================
+            // TABLA DE GRUPOS
+            // =========================
+
+            const grupos = {};
+
+            matches.forEach(m => {
+
+                if (!m.grupo) return;
+
+                if (
+                    m.homeResult === null ||
+                    m.awayResult === null
+                ) return;
+
+                if (!grupos[m.grupo]) {
+
+                    grupos[m.grupo] = {};
+
+                }
+
+                // Crear equipos
+                [m.homeTeam, m.awayTeam]
+                    .forEach(eq => {
+
+                        if (!grupos[m.grupo][eq]) {
+
+                            grupos[m.grupo][eq] = {
+
+                                equipo: eq,
+
+                                pts: 0,
+                                dg: 0,
+                                gf: 0
+
+                            };
+
+                        }
 
                     });
 
-                if (tabla[0]) primeros.push(tabla[0]);
-                if (tabla[1]) segundos.push(tabla[1]);
-                if (tabla[2]) terceros.push(tabla[2]);
+                const home =
+                    grupos[m.grupo][m.homeTeam];
+
+                const away =
+                    grupos[m.grupo][m.awayTeam];
+
+                // Goles
+                home.gf += m.homeResult;
+                away.gf += m.awayResult;
+
+                home.dg +=
+                    m.homeResult - m.awayResult;
+
+                away.dg +=
+                    m.awayResult - m.homeResult;
+
+                // Puntos
+                if (m.homeResult > m.awayResult) {
+
+                    home.pts += 3;
+
+                }
+
+                else if (
+                    m.homeResult < m.awayResult
+                ) {
+
+                    away.pts += 3;
+
+                }
+
+                else {
+
+                    home.pts += 1;
+                    away.pts += 1;
+
+                }
 
             });
 
-        terceros.sort((a, b) => {
+            // =========================
+            // CLASIFICADOS
+            // =========================
 
-            return (
-                b.pts - a.pts ||
-                b.dg - a.dg ||
-                b.gf - a.gf
+            let primeros = [];
+            let segundos = [];
+            let terceros = [];
+
+            Object.keys(grupos).forEach(g => {
+
+                const tabla =
+                    Object.values(grupos[g])
+
+                    .sort((a, b) => {
+
+                        if (b.pts !== a.pts)
+                            return b.pts - a.pts;
+
+                        if (b.dg !== a.dg)
+                            return b.dg - a.dg;
+
+                        return b.gf - a.gf;
+
+                    });
+
+                if (tabla[0])
+                    primeros.push(tabla[0]);
+
+                if (tabla[1])
+                    segundos.push(tabla[1]);
+
+                if (tabla[2])
+                    terceros.push(tabla[2]);
+
+            });
+
+            // =========================
+            // 8 MEJORES TERCEROS
+            // =========================
+
+            terceros.sort((a, b) => {
+
+                if (b.pts !== a.pts)
+                    return b.pts - a.pts;
+
+                if (b.dg !== a.dg)
+                    return b.dg - a.dg;
+
+                return b.gf - a.gf;
+
+            });
+
+            terceros =
+                terceros.slice(0, 8);
+
+            // =========================
+            // CLASIFICADOS
+            // =========================
+
+            const clasificados = [
+
+                ...primeros,
+                ...segundos,
+                ...terceros
+
+            ];
+
+            if (clasificados.length < 32) {
+
+                return res.json({
+
+                    ok: false,
+
+                    mensaje:
+                        'Aún no hay suficientes equipos clasificados'
+
+                });
+
+            }
+
+            // =========================
+            // LIMPIAR 32AVOS
+            // =========================
+
+            await pool.query(
+
+                `DELETE FROM brackets
+                WHERE fase='32avos'`
+
             );
 
-        });
+            // =========================
+            // CREAR LLAVES
+            // =========================
 
-        const mejoresTerceros =
-            terceros.slice(0, 8);
+            for (let i = 0; i < 32; i += 2) {
 
-        const clasificados = [
+                const eq1 =
+                    clasificados[i];
 
-            ...primeros,
-            ...segundos,
-            ...mejoresTerceros
+                const eq2 =
+                    clasificados[i + 1];
 
-        ];
+                await pool.query(
 
-        let nuevos = [];
+                    `INSERT INTO brackets
+                    (
+                        fase,
+                        equipo1,
+                        equipo2
+                    )
+                    VALUES
+                    (?, ?, ?)`,
 
-        for (let i = 0; i < 16; i++) {
+                    [
 
-            nuevos.push({
+                        '32avos',
+                        eq1.equipo,
+                        eq2.equipo
 
-                id: obtenerNuevoId([
-                    ...brackets,
-                    ...nuevos
-                ]),
+                    ]
 
-                fase: '32avos',
+                );
 
-                equipo1:
-                    clasificados[i].equipo,
+            }
 
-                equipo2:
-                    clasificados[
-                        clasificados.length - 1 - i
-                    ].equipo,
+            res.json({
 
-                ganador: null,
-
-                fecha: '',
-                hora: ''
+                ok: true,
+                mensaje:
+                    '32avos generados correctamente'
 
             });
 
         }
 
-        brackets.push(...nuevos);
+        catch (error) {
 
-        guardarJSON(
-            './data/brackets.json',
-            brackets
-        );
+            console.log(error);
 
-        res.json({
-            mensaje: '32avos generados ✅'
-        });
+            res.status(500).json({
 
-    }
+                ok: false,
+                mensaje:
+                    'Error generando 32avos'
 
-    catch (error) {
+            });
 
-        console.log(error);
-
-        res.status(500).json({
-            mensaje: 'Error generando 32avos'
-        });
+        }
 
     }
+);
 
-});
 
-// =======================
+// ======================================================
 // 🏆 GENERAR OCTAVOS
-// =======================
+// ======================================================
 
-app.post('/generar-octavos', soloAdmin, (req, res) => {
+app.post(
+    '/generar-octavos',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
 
-    try {
+        try {
 
-        let brackets =
-            leerJSON('./data/brackets.json');
+            const [brackets] =
+                await pool.query(
 
-        const yaExiste = brackets.find(
-            b => b.fase === 'Octavos'
-        );
+                    `SELECT *
+                    FROM brackets
+                    WHERE fase='32avos'
+                    ORDER BY id ASC`
 
-        if (yaExiste) {
+                );
 
-            return res.json({
-                mensaje: 'Los octavos ya existen'
+            const ganadores =
+                brackets
+                    .filter(b => b.ganador)
+                    .map(b => b.ganador);
+
+            if (ganadores.length < 16) {
+
+                return res.json({
+
+                    ok: false,
+                    mensaje:
+                        'Faltan ganadores de 32avos'
+
+                });
+
+            }
+
+            await pool.query(
+
+                `DELETE FROM brackets
+                WHERE fase='octavos'`
+
+            );
+
+            for (let i = 0; i < 16; i += 2) {
+
+                await pool.query(
+
+                    `INSERT INTO brackets
+                    (
+                        fase,
+                        equipo1,
+                        equipo2
+                    )
+                    VALUES
+                    (?, ?, ?)`,
+
+                    [
+
+                        'octavos',
+                        ganadores[i],
+                        ganadores[i + 1]
+
+                    ]
+
+                );
+
+            }
+
+            res.json({
+
+                ok: true,
+                mensaje:
+                    'Octavos generados'
+
             });
 
         }
 
-        const ganadores =
-            brackets
-                .filter(
-                    b =>
-                        b.fase === '32avos' &&
-                        b.ganador
-                )
-                .map(b => b.ganador);
+        catch (error) {
 
-        if (ganadores.length < 16) {
+            console.log(error);
 
-            return res.json({
-                mensaje: 'Faltan ganadores en 32avos'
-            });
+            res.status(500).json({
 
-        }
-
-        for (let i = 0; i < 8; i++) {
-
-            brackets.push({
-
-                id: obtenerNuevoId(brackets),
-
-                fase: 'Octavos',
-
-                equipo1: ganadores[i * 2],
-
-                equipo2: ganadores[i * 2 + 1],
-
-                ganador: null,
-
-                fecha: '',
-                hora: ''
+                ok: false,
+                mensaje:
+                    'Error octavos'
 
             });
 
         }
-
-        guardarJSON(
-            './data/brackets.json',
-            brackets
-        );
-
-        res.json({
-            mensaje: 'Octavos generados ✅'
-        });
 
     }
+);
 
-    catch (error) {
 
-        console.log(error);
-
-        res.status(500).json({
-            mensaje: 'Error generando octavos'
-        });
-
-    }
-
-});
-
-// =======================
+// ======================================================
 // 🏆 GENERAR CUARTOS
-// =======================
+// ======================================================
 
-app.post('/generar-cuartos', soloAdmin, (req, res) => {
+app.post(
+    '/generar-cuartos',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
 
-    try {
+        try {
 
-        let brackets =
-            leerJSON('./data/brackets.json');
+            // Obtener octavos
+            const [octavos] =
+                await pool.query(
 
-        const yaExiste = brackets.find(
-            b => b.fase === 'Cuartos'
-        );
+                    `SELECT *
+                     FROM brackets
+                     WHERE fase='octavos'
+                     ORDER BY id ASC`
 
-        if (yaExiste) {
+                );
 
-            return res.json({
-                mensaje: 'Los cuartos ya existen'
+            // Validar ganadores
+            const ganadores =
+                octavos.filter(o => o.ganador);
+
+            if (ganadores.length < 8) {
+
+                return res.json({
+
+                    ok:false,
+                    mensaje:'Faltan ganadores en octavos'
+
+                });
+
+            }
+
+            // Limpiar cuartos viejos
+            await pool.query(
+
+                `DELETE FROM brackets
+                 WHERE fase='cuartos'`
+
+            );
+
+            // Crear cuartos
+            for(let i=0; i<8; i+=2){
+
+                await pool.query(
+
+                    `INSERT INTO brackets
+                    (
+                        fase,
+                        equipo1,
+                        equipo2
+                    )
+                    VALUES(?,?,?)`,
+
+                    [
+
+                        'cuartos',
+
+                        ganadores[i].ganador,
+
+                        ganadores[i+1].ganador
+
+                    ]
+
+                );
+
+            }
+
+            res.json({
+
+                ok:true,
+                mensaje:'Cuartos generados'
+
             });
 
         }
 
-        const ganadores =
-            brackets
-                .filter(
-                    b =>
-                        b.fase === 'Octavos' &&
-                        b.ganador
-                )
-                .map(b => b.ganador);
+        catch(error){
 
-        if (ganadores.length < 8) {
+            console.log(error);
 
-            return res.json({
-                mensaje: 'Faltan ganadores en octavos'
-            });
+            res.status(500).json({
 
-        }
-
-        for (let i = 0; i < 4; i++) {
-
-            brackets.push({
-
-                id: obtenerNuevoId(brackets),
-
-                fase: 'Cuartos',
-
-                equipo1: ganadores[i * 2],
-
-                equipo2: ganadores[i * 2 + 1],
-
-                ganador: null,
-
-                fecha: '',
-                hora: ''
+                ok:false,
+                mensaje:'Error generando cuartos'
 
             });
 
         }
-
-        guardarJSON(
-            './data/brackets.json',
-            brackets
-        );
-
-        res.json({
-            mensaje: 'Cuartos generados ✅'
-        });
 
     }
+);
 
-    catch (error) {
 
-        console.log(error);
-
-        res.status(500).json({
-            mensaje: 'Error generando cuartos'
-        });
-
-    }
-
-});
-
-// =======================
+// ======================================================
 // 🏆 GENERAR SEMIS
-// =======================
+// ======================================================
 
-app.post('/generar-semis', soloAdmin, (req, res) => {
+app.post(
+    '/generar-semis',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
 
-    try {
+        try {
 
-        let brackets =
-            leerJSON('./data/brackets.json');
+            const [cuartos] =
+                await pool.query(
 
-        const yaExiste = brackets.find(
-            b => b.fase === 'Semis'
-        );
+                    `SELECT *
+                     FROM brackets
+                     WHERE fase='cuartos'
+                     ORDER BY id ASC`
 
-        if (yaExiste) {
+                );
 
-            return res.json({
-                mensaje: 'Las semis ya existen'
+            const ganadores =
+                cuartos.filter(c => c.ganador);
+
+            if (ganadores.length < 4) {
+
+                return res.json({
+
+                    ok:false,
+                    mensaje:'Faltan ganadores en cuartos'
+
+                });
+
+            }
+
+            await pool.query(
+
+                `DELETE FROM brackets
+                 WHERE fase='semi'`
+
+            );
+
+            for(let i=0; i<4; i+=2){
+
+                await pool.query(
+
+                    `INSERT INTO brackets
+                    (
+                        fase,
+                        equipo1,
+                        equipo2
+                    )
+                    VALUES(?,?,?)`,
+
+                    [
+
+                        'semi',
+
+                        ganadores[i].ganador,
+
+                        ganadores[i+1].ganador
+
+                    ]
+
+                );
+
+            }
+
+            res.json({
+
+                ok:true,
+                mensaje:'Semifinal generada'
+
             });
 
         }
 
-        const ganadores =
-            brackets
-                .filter(
-                    b =>
-                        b.fase === 'Cuartos' &&
-                        b.ganador
-                )
-                .map(b => b.ganador);
+        catch(error){
 
-        if (ganadores.length < 4) {
+            console.log(error);
 
-            return res.json({
-                mensaje: 'Faltan ganadores en cuartos'
-            });
+            res.status(500).json({
 
-        }
-
-        for (let i = 0; i < 2; i++) {
-
-            brackets.push({
-
-                id: obtenerNuevoId(brackets),
-
-                fase: 'Semis',
-
-                equipo1: ganadores[i * 2],
-
-                equipo2: ganadores[i * 2 + 1],
-
-                ganador: null,
-
-                fecha: '',
-                hora: ''
+                ok:false,
+                mensaje:'Error generando semis'
 
             });
 
         }
-
-        guardarJSON(
-            './data/brackets.json',
-            brackets
-        );
-
-        res.json({
-            mensaje: 'Semis generadas ✅'
-        });
 
     }
+);
 
-    catch (error) {
 
-        console.log(error);
 
-        res.status(500).json({
-            mensaje: 'Error generando semis'
-        });
-
-    }
-
-});
-
-// =======================
+// ======================================================
 // 🏆 GENERAR FINAL
-// =======================
+// ======================================================
 
-app.post('/generar-final', soloAdmin, (req, res) => {
+app.post(
+    '/generar-final',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
 
-    try {
+        try {
 
-        let brackets =
-            leerJSON('./data/brackets.json');
+            const [semis] =
+                await pool.query(
 
-        const yaExiste = brackets.find(
-            b => b.fase === 'Final'
-        );
+                    `SELECT *
+                     FROM brackets
+                     WHERE fase='semi'
+                     ORDER BY id ASC`
 
-        if (yaExiste) {
+                );
 
-            return res.json({
-                mensaje: 'La final ya existe'
-            });
+            const ganadores =
+                semis.filter(s => s.ganador);
 
-        }
+            if (ganadores.length < 2) {
 
-        const ganadores =
-            brackets
-                .filter(
-                    b =>
-                        b.fase === 'Semis' &&
-                        b.ganador
+                return res.json({
+
+                    ok:false,
+                    mensaje:'Faltan ganadores en semifinal'
+
+                });
+
+            }
+
+            await pool.query(
+
+                `DELETE FROM brackets
+                 WHERE fase='final'`
+
+            );
+
+            await pool.query(
+
+                `INSERT INTO brackets
+                (
+                    fase,
+                    equipo1,
+                    equipo2
                 )
-                .map(b => b.ganador);
+                VALUES(?,?,?)`,
 
-        if (ganadores.length < 2) {
+                [
 
-            return res.json({
-                mensaje: 'Faltan ganadores en semis'
+                    'final',
+
+                    ganadores[0].ganador,
+
+                    ganadores[1].ganador
+
+                ]
+
+            );
+
+            res.json({
+
+                ok:true,
+                mensaje:'Final generada'
+
             });
 
         }
 
-        brackets.push({
+        catch(error){
 
-            id: obtenerNuevoId(brackets),
+            console.log(error);
 
-            fase: 'Final',
+            res.status(500).json({
 
-            equipo1: ganadores[0],
+                ok:false,
+                mensaje:'Error generando final'
 
-            equipo2: ganadores[1],
+            });
 
-            ganador: null,
-
-            fecha: '',
-            hora: ''
-
-        });
-
-        guardarJSON(
-            './data/brackets.json',
-            brackets
-        );
-
-        res.json({
-            mensaje: 'Final generada ✅'
-        });
+        }
 
     }
+);
 
-    catch (error) {
+// ======================================================
+// 🗑️ REINICIAR TORNEO
+// ======================================================
 
-        console.log(error);
+app.post(
+    '/reiniciar-torneo',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
 
-        res.status(500).json({
-            mensaje: 'Error generando final'
-        });
+        try {
+
+            // =========================
+            // LIMPIAR RESULTADOS MATCHES
+            // =========================
+
+            await pool.query(
+
+                `UPDATE matches
+                 SET
+                 homeResult = NULL,
+                 awayResult = NULL`
+
+            );
+
+            // =========================
+            // LIMPIAR BRACKETS
+            // =========================
+
+            await pool.query(
+
+                `UPDATE brackets
+                 SET ganador = NULL`
+
+            );
+
+            // =========================
+            // BORRAR APUESTAS
+            // =========================
+
+            await pool.query(
+
+                `DELETE FROM apuestas`
+
+            );
+
+            // =========================
+            // BORRAR APUESTAS BRACKETS
+            // =========================
+
+            try {
+
+                await pool.query(
+
+                    `DELETE FROM bracket_apuestas`
+
+                );
+
+            }
+
+            catch (e) {
+
+                console.log(
+                    'bracket_apuestas no existe aún'
+                );
+
+            }
+
+            // =========================
+            // RESET PUNTOS
+            // =========================
+
+            await pool.query(
+
+                `UPDATE users
+                 SET puntos = 0`
+
+            );
+
+            res.json({
+
+                ok: true,
+
+                mensaje:
+                    'Torneo reiniciado correctamente'
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+
+                mensaje:
+                    error.message
+
+            });
+
+        }
 
     }
+);
 
-});
+// ======================================================
+// 🏆 REINICIAR BRACKETS
+// ======================================================
+// ======================================================
+// 🏆 REINICIAR BRACKETS
+// ======================================================
 
-// =======================
-// 🚀 SERVER
-// =======================
+app.post(
+    '/reiniciar-brackets',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
 
-app.listen(process.env.PORT || 3000, () => {
+        try {
+
+            // borrar brackets
+            await pool.query(
+
+                `DELETE FROM brackets`
+
+            );
+
+            // borrar apuestas brackets
+            try {
+
+                await pool.query(
+
+                    `DELETE FROM bracket_apuestas`
+
+                );
+
+            }
+
+            catch (e) {
+
+                console.log(e);
+
+            }
+
+            res.json({
+
+                ok: true,
+
+                mensaje:
+                    'Brackets reiniciados'
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+
+                mensaje:
+                    'Error reiniciando brackets'
+
+            });
+
+        }
+
+    }
+);
+
+
+// ======================================================
+// 🔑 RESET PASSWORD
+// ======================================================
+
+app.post(
+    '/reset-password',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
+
+        try {
+
+            const {
+                userId,
+                nuevaPassword
+            } = req.body;
+
+            const hash =
+                await bcrypt.hash(
+                    nuevaPassword,
+                    10
+                );
+
+            await pool.query(
+
+                `UPDATE users
+                 SET password=?
+                 WHERE id=?`,
+
+                [
+                    hash,
+                    userId
+                ]
+
+            );
+
+            res.json({
+
+                ok: true,
+
+                mensaje:
+                    'Contraseña actualizada'
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+
+                mensaje:
+                    'Error reset password'
+
+            });
+
+        }
+
+    }
+);
+
+app.delete(
+    '/usuario/:id',
+    verificarToken,
+    soloAdmin,
+    async (req, res) => {
+
+        try {
+
+            const { id } = req.params;
+
+            // 🚫 EVITAR BORRARSE A SI MISMO
+
+            if (
+                Number(id) === req.session.usuario.id
+            ) {
+
+                return res.json({
+
+                    ok: false,
+
+                    mensaje:
+                        'No puedes eliminarte'
+
+                });
+
+            }
+
+            // =========================
+            // ELIMINAR APUESTAS PARTIDOS
+            // =========================
+
+            await pool.query(
+
+                `DELETE FROM apuestas
+                 WHERE userId=?`,
+
+                [id]
+
+            );
+
+            // =========================
+            // ELIMINAR APUESTAS BRACKETS
+            // =========================
+
+            await pool.query(
+
+                `DELETE FROM bracket_apuestas
+                 WHERE userId=?`,
+
+                [id]
+
+            );
+
+            // =========================
+            // ELIMINAR USUARIO
+            // =========================
+
+            await pool.query(
+
+                `DELETE FROM users
+                 WHERE id=?`,
+
+                [id]
+
+            );
+
+            res.json({
+
+                ok: true,
+                mensaje: 'Usuario eliminado'
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+                mensaje:
+                    'Error eliminando usuario'
+
+            });
+
+        }
+
+    }
+);
+
+
+
+
+// ======================================================
+// START
+// ======================================================
+
+app.listen(PORT, () => {
 
     console.log(
-        'Servidor en http://localhost:3000'
+        `Servidor corriendo en puerto ${PORT}`
     );
 
 });
+

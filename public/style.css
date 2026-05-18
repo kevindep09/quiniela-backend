@@ -742,3 +742,476 @@ tr:hover{
     filter:
         grayscale(0.25);
 }
+
+/* ===================================== */
+/* 🏆 BRACKETS MUNDIAL */
+/* ===================================== */
+
+.titulo-llaves {
+
+    text-align: center;
+
+    margin-top: 60px;
+
+    margin-bottom: 35px;
+
+    font-size: 42px;
+
+    font-weight: 900;
+
+    color: #ffffff;
+
+}
+
+/* CONTENEDOR GENERAL */
+
+.bracket-wrapper {
+
+    width: 100%;
+
+    overflow-x: auto;
+
+    padding: 40px 30px;
+
+}
+
+/* COLUMNAS */
+
+.bracket {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 140px; /* ← MÁS SEPARACIÓN ENTRE RONDAS */
+
+    min-width: 2200px;
+
+    padding-bottom: 30px;
+
+}
+
+/* CADA RONDA */
+
+.round {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 35px;
+
+    min-width: 260px;
+
+}
+
+/* TÍTULO */
+
+.round-title {
+
+    text-align: center;
+
+    font-size: 28px;
+
+    font-weight: 900;
+
+    color: #00d4ff;
+
+    letter-spacing: 1px;
+
+    text-transform: uppercase;
+
+    margin-bottom: 10px;
+
+}
+
+/* CUADRO */
+
+.match {
+
+    width: 260px; /* ← MÁS PEQUEÑO */
+
+    min-height: 120px;
+
+    background: linear-gradient(
+        145deg,
+        #132238,
+        #0d1726
+    );
+
+    border: 2px solid #00d4ff;
+
+    border-radius: 18px;
+
+    padding: 16px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    box-shadow:
+        0 0 12px rgba(0,212,255,.25),
+        0 0 25px rgba(0,0,0,.35);
+
+    transition: .25s;
+
+}
+
+.match:hover {
+
+    transform: scale(1.04);
+
+    box-shadow:
+        0 0 20px rgba(0,212,255,.45),
+        0 0 35px rgba(0,0,0,.45);
+
+}
+
+/* EQUIPOS */
+
+.match-team {
+
+    width: 100%;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    text-align: center;
+
+    min-height: 36px;
+
+    font-size: 22px;
+
+    font-weight: 900;
+
+    color: white;
+
+    line-height: 1.15;
+
+    padding: 4px;
+
+    overflow-wrap: break-word;
+
+}
+
+/* SEPARADOR */
+
+.match-divider {
+
+    width: 100%;
+
+    height: 2px;
+
+    background: rgba(255,255,255,.12);
+
+}
+
+/* GANADOR */
+
+.match-winner {
+
+    margin-top: 6px;
+
+    text-align: center;
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    color: #00ff99;
+
+}
+
+/* RESPONSIVE */
+
+@media(max-width:768px){
+
+    .bracket{
+
+        gap:70px;
+
+        min-width:1600px;
+
+    }
+
+    .match{
+
+        width:220px;
+
+        min-height:110px;
+
+    }
+
+    .match-team{
+
+        font-size:18px;
+
+    }
+
+}
+
+
+
+
+/* ===================================== */
+/* 🌍 GRUPOS */
+/* ===================================== */
+/* ===================================== */
+/* 🌍 TABLAS DE GRUPOS */
+/* ===================================== */
+
+#gruposContainer {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(420px, 1fr));
+
+    gap: 25px;
+
+    margin-top: 25px;
+
+}
+
+/* CARD */
+
+.grupo-card {
+
+    width: 100%;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            145deg,
+            #132238,
+            #0d1726
+        );
+
+    border: 2px solid #00d4ff;
+
+    border-radius: 22px;
+
+    padding: 18px;
+
+    box-shadow:
+        0 0 15px rgba(0,212,255,.15),
+        0 0 30px rgba(0,0,0,.35);
+
+}
+
+/* TITULO */
+
+.grupo-titulo {
+
+    text-align: center;
+
+    margin-bottom: 18px;
+
+    color: #00d4ff;
+
+    font-size: 26px;
+
+    font-weight: 900;
+
+    letter-spacing: .5px;
+
+}
+
+/* TABLA */
+
+.grupo-tabla td {
+
+    font-size: 14px;
+
+    padding: 10px 5px;
+
+    text-align: center;
+
+    color: white;
+
+    white-space: normal;
+
+    word-break: break-word;
+
+}
+
+/* HEADERS */
+
+.grupo-tabla th {
+
+    background: rgba(255,255,255,.08);
+
+    color: #8fdcff;
+
+    font-size: 13px;
+
+    padding: 10px 4px;
+
+    text-align: center;
+
+}
+
+/* CELDAS */
+
+.grupo-tabla td {
+
+    font-size: 14px;
+
+    padding: 10px 5px;
+
+    text-align: center;
+
+    color: white;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+}
+
+/* NOMBRE EQUIPO */
+
+.grupo-tabla td:first-child {
+
+    font-weight: bold;
+
+    font-size: 14px;
+
+    text-align: left;
+
+    padding-left: 10px;
+
+    min-width: 120px;
+
+    white-space: normal;
+
+    line-height: 1.2;
+
+}
+
+/* FILAS */
+
+.grupo-tabla tr {
+
+    border-bottom:
+        1px solid rgba(255,255,255,.06);
+
+}
+
+/* CLASIFICADOS */
+
+.clasificado {
+
+    background:
+        rgba(0,255,100,.14);
+
+}
+
+/* TERCEROS */
+
+.tercero {
+
+    background:
+        rgba(255,200,0,.10);
+
+}
+
+/* RESPONSIVE */
+
+@media(max-width:768px){
+
+    #gruposContainer{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .grupo-tabla th,
+    .grupo-tabla td{
+
+        font-size:12px;
+
+        padding:8px 2px;
+
+    }
+
+}
+.bracket-select {
+
+    width: 100%;
+
+    margin-top: 10px;
+
+    padding: 10px;
+
+    border-radius: 10px;
+
+    border: none;
+
+    background: rgba(255,255,255,.08);
+
+    color: white;
+
+    font-weight: bold;
+
+    text-align: center;
+
+}
+.telegram-btn{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    width:100%;
+
+    max-width:340px;
+
+    margin:25px auto;
+
+    padding:16px;
+
+    border-radius:18px;
+
+    text-decoration:none;
+
+    font-size:18px;
+
+    font-weight:bold;
+
+    color:white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #229ED9,
+            #1b7fb0
+        );
+
+    box-shadow:
+        0 10px 30px rgba(34,158,217,.35);
+
+    transition:0.25s;
+}
+
+.telegram-btn:hover{
+
+    transform:
+        translateY(-2px)
+        scale(1.02);
+
+    box-shadow:
+        0 15px 40px rgba(34,158,217,.45);
+}

@@ -1,83 +1,80 @@
+
 // =======================
 // 🔐 LOGIN
 // =======================
-const form =
-    document.getElementById('loginForm');
 
-form.addEventListener('submit',
-async (e) => {
+const form = document.getElementById('loginForm');
 
-    e.preventDefault();
+if (form) {
 
-    try {
+    form.addEventListener('submit', async (e) => {
 
-        const nombre =
-            document.getElementById(
-                'nombre'
-            ).value;
+        e.preventDefault();
 
-        const password =
-            document.getElementById(
-                'password'
-            ).value;
+        try {
 
-        const res = await fetch('/login', {
+            const nombre =
+                document.getElementById('nombre').value.trim();
 
-            method: 'POST',
+            const password =
+                document.getElementById('password').value.trim();
 
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            const res = await fetch('/login', {
 
-            credentials: 'include',
+                method: 'POST',
 
-            body: JSON.stringify({
-                nombre,
-                password
-            })
+                credentials: 'include',
 
-        });
+                headers: {
+                    'Content-Type': 'application/json'
+                },
 
-        const data = await res.json();
+                body: JSON.stringify({
+                    nombre,
+                    password
+                })
 
-        // 🚫 LOGIN INCORRECTO
-        if (!data.ok) {
+            });
+
+            const data = await res.json();
+
+            if (!data.ok) {
+
+                alert(data.mensaje);
+                return;
+
+            }
+
+            // ✅ GUARDAR USUARIO
+            localStorage.setItem(
+                'usuario',
+                JSON.stringify(data.usuario)
+            );
 
             alert(data.mensaje);
 
-            return;
+            // ✅ REDIRECCION
+            if (data.usuario.rol === 'admin') {
+
+                window.location.href = '/admin.html';
+
+            } else {
+
+                window.location.href = '/index.html';
+
+            }
 
         }
 
-        // ✅ GUARDAR USUARIO
-        localStorage.setItem(
-            'usuario',
-            JSON.stringify(data.user)
-        );
+        catch (error) {
 
-        // ✅ REDIRECCION
-        if (data.user.rol === 'admin') {
+            console.log(error);
 
-            window.location.href =
-                '/admin.html';
+            alert('Error conectando al servidor');
 
         }
 
-        else {
+    });
 
-            window.location.href =
-                '/index.html';
+}
 
-        }
-
-    }
-
-    catch (error) {
-
-        console.log(error);
-
-        alert('Error en login');
-
-    }
-
-});

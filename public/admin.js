@@ -1,23 +1,86 @@
 // =======================
 // 🔐 VALIDAR ADMIN
 // =======================
-const usuario = JSON.parse(
-    localStorage.getItem('usuario')
-);
 
-if (
-    !usuario ||
-    usuario.rol !== 'admin'
-) {
+async function validarAdmin() {
 
-    window.location.href =
-        '/login.html';
+    try {
+
+        const res =
+            await fetch('/session', {
+
+                credentials: 'include'
+
+            });
+
+        const data =
+            await res.json();
+
+        if (
+            !data.user ||
+            data.user.rol !== 'admin'
+        ) {
+
+            window.location.href =
+                '/login.html';
+
+            return false;
+
+        }
+
+        localStorage.setItem(
+            'usuario',
+            JSON.stringify(data.user)
+        );
+
+        return true;
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+        window.location.href =
+            '/login.html';
+
+        return false;
+
+    }
 
 }
 
 // =======================
 // 🚪 LOGOUT
 // =======================
+
+async function logout() {
+
+    try {
+
+        await fetch('/logout', {
+
+            method: 'POST',
+
+            credentials: 'include'
+
+        });
+
+        localStorage.removeItem('usuario');
+
+        window.location.href =
+            '/login.html';
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+}
+
 const logoutBtn =
     document.getElementById('logoutBtn');
 
@@ -25,27 +88,7 @@ if (logoutBtn) {
 
     logoutBtn.addEventListener(
         'click',
-        async () => {
-
-            try {
-
-                await fetch('/logout', {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-
-            } catch (error) {
-
-                console.log(error);
-
-            }
-
-            localStorage.removeItem('usuario');
-
-            window.location.href =
-                '/login.html';
-
-        }
+        logout
     );
 
 }
@@ -53,6 +96,11 @@ if (logoutBtn) {
 // =======================
 // 🔄 CARGAR ADMIN
 // =======================
+
+// =======================
+// 🔄 CARGAR ADMIN
+// =======================
+
 async function cargarAdmin() {
 
     try {
@@ -60,12 +108,13 @@ async function cargarAdmin() {
         // =======================
         // ⚽ PARTIDOS
         // =======================
-        const resMatches = await fetch(
-            '/matches',
-            {
+
+        const resMatches =
+            await fetch('/matches', {
+
                 credentials: 'include'
-            }
-        );
+
+            });
 
         const matches =
             await resMatches.json();
@@ -81,81 +130,77 @@ async function cargarAdmin() {
 
             tbody.innerHTML += `
 
-                <tr>
+<tr>
 
-                    <td>${m.id}</td>
+<td>${m.id}</td>
 
-                    <td>${m.grupo || '-'}</td>
+<td>${m.grupo || '-'}</td>
 
-                    <td>
-                        ${m.homeTeam}
-                        vs
-                        ${m.awayTeam}
-                    </td>
+<td>
 
-                    <td>
+${m.homeTeam}
+vs
+${m.awayTeam}
 
-                        <input
-                            type="date"
-                            id="fecha-${m.id}"
-                            value="${m.fecha || ''}"
-                        >
+</td>
 
-                    </td>
+<td>
 
-                    <td>
+<input
+type="date"
+id="fecha-${m.id}"
+value="${m.fecha ? m.fecha.split('T')[0] : ''}"
+>
 
-                        <input
-                            type="time"
-                            id="hora-${m.id}"
-                            value="${m.hora || ''}"
-                        >
+</td>
 
-                    </td>
+<td>
 
-                    <td>
+<input
+type="time"
+id="hora-${m.id}"
+value="${m.hora || ''}"
+>
 
-                        <input
-                            type="number"
-                            id="home-${m.id}"
-                            value="${m.resultado?.home ?? ''}"
-                            style="width:60px"
-                        >
+</td>
 
-                        -
+<td>
 
-                        <input
-                            type="number"
-                            id="away-${m.id}"
-                            value="${m.resultado?.away ?? ''}"
-                            style="width:60px"
-                        >
+<input
+type="number"
+id="home-${m.id}"
+value="${m.homeResult ?? ''}"
+style="width:60px"
+>
 
-                    </td>
+-
 
-                    <td>
+<input
+type="number"
+id="away-${m.id}"
+value="${m.awayResult ?? ''}"
+style="width:60px"
+>
 
-                        <button
-                            onclick="guardarResultado(${m.id})"
-                        >
-                            💾 Resultado
-                        </button>
+</td>
 
-                        <button
-                            onclick="guardarFechaHora(${m.id})"
-                        >
-                            🕒 Fecha
-                        </button>
+<td>
 
-                        <button
-                            onclick="eliminarPartido(${m.id})"
-                        >
-                            ❌
-                        </button>
+<button onclick="guardarResultado(${m.id})">
+💾 Resultado
+</button>
 
-                    </td>
+<button onclick="guardarFechaHora(${m.id})">
+🕒 Fecha
+</button>
 
-                </tr>
+<button onclick="eliminarPartido(${m.id})">
+❌
+</button>
+
+</td>
+
+</tr>
 
             `;
 
@@ -164,12 +209,13 @@ async function cargarAdmin() {
         // =======================
         // 🏆 BRACKETS
         // =======================
-        const resBrackets = await fetch(
-            '/brackets',
-            {
+
+        const resBrackets =
+            await fetch('/brackets', {
+
                 credentials: 'include'
-            }
-        );
+
+            });
 
         const brackets =
             await resBrackets.json();
@@ -181,209 +227,71 @@ async function cargarAdmin() {
 
         tablaBrackets.innerHTML = '';
 
-        brackets.forEach(b => {
+brackets.forEach(b => {
 
-            tablaBrackets.innerHTML += `
+    tablaBrackets.innerHTML += `
 
-                <tr>
+<tr>
 
-                    <td>${b.id}</td>
+<td>${b.id}</td>
 
-                    <td>${b.fase}</td>
+<td>${b.fase}</td>
 
-                    <td>
-                        ${b.equipo1}
-                        vs
-                        ${b.equipo2}
-                    </td>
+<td>
 
-                    <td>
+${b.equipo1}
+vs
+${b.equipo2}
 
-                        <input
-                            type="date"
-                            id="fecha-bracket-${b.id}"
-                            value="${b.fecha || ''}"
-                        >
+</td>
 
-                    </td>
+<td>
 
-                    <td>
+<select id="ganador-${b.id}">
 
-                        <input
-                            type="time"
-                            id="hora-bracket-${b.id}"
-                            value="${b.hora || ''}"
-                        >
+<option value="">
+Seleccionar
+</option>
 
-                    </td>
+<option
+value="${b.equipo1}"
+${b.ganador === b.equipo1 ? 'selected' : ''}
+>
 
-                    <td>
+${b.equipo1}
 
-                        <select
-                            id="ganador-${b.id}"
-                        >
+</option>
 
-                            <option value="">
-                                Seleccionar
-                            </option>
+<option
+value="${b.equipo2}"
+${b.ganador === b.equipo2 ? 'selected' : ''}
+>
 
-                            <option
-                                value="${b.equipo1}"
-                                ${b.ganador === b.equipo1 ? 'selected' : ''}
-                            >
-                                ${b.equipo1}
-                            </option>
+${b.equipo2}
 
-                            <option
-                                value="${b.equipo2}"
-                                ${b.ganador === b.equipo2 ? 'selected' : ''}
-                            >
-                                ${b.equipo2}
-                            </option>
+</option>
 
-                        </select>
+</select>
 
-                    </td>
+</td>
 
-                    <td>
+<td>
 
-                        <button
-                            onclick="guardarGanador(${b.id})"
-                        >
-                            💾 Ganador
-                        </button>
+<button onclick="guardarGanador(${b.id})">
+💾 Guardar
+</button>
 
-                        <button
-                            onclick="guardarBracketFechaHora(${b.id})"
-                        >
-                            🕒 Fecha
-                        </button>
+<button onclick="eliminarBracket(${b.id})">
+❌
+</button>
 
-                        <button
-                            onclick="eliminarBracket(${b.id})"
-                        >
-                            ❌
-                        </button>
+</td>
 
-                    </td>
+</tr>
 
-                </tr>
+    `;
 
-            `;
-
-        });
-
-    }
-
-    catch (error) {
-
-        console.log(error);
-
-    }
-
-}
-
-// =======================
-// 💾 GUARDAR FECHA/HORA
-// =======================
-async function guardarFechaHora(id) {
-
-    try {
-
-        const fecha =
-            document.getElementById(
-                `fecha-${id}`
-            ).value;
-
-        const hora =
-            document.getElementById(
-                `hora-${id}`
-            ).value;
-
-        const res = await fetch(
-            '/editar-partido',
-            {
-
-                method: 'POST',
-
-                headers: {
-                    'Content-Type':
-                        'application/json'
-                },
-
-                credentials: 'include',
-
-                body: JSON.stringify({
-
-                    id,
-                    fecha,
-                    hora
-
-                })
-
-            }
-        );
-
-        const data =
-            await res.json();
-
-        alert(data.mensaje);
-
-    }
-
-    catch (error) {
-
-        console.log(error);
-
-    }
-
-}
-
-// =======================
-// 💾 GUARDAR FECHA/HORA BRACKET
-// =======================
-async function guardarBracketFechaHora(id) {
-
-    try {
-
-        const fecha =
-            document.getElementById(
-                `fecha-bracket-${id}`
-            ).value;
-
-        const hora =
-            document.getElementById(
-                `hora-bracket-${id}`
-            ).value;
-
-        const res = await fetch(
-            '/editar-bracket',
-            {
-
-                method: 'POST',
-
-                headers: {
-                    'Content-Type':
-                        'application/json'
-                },
-
-                credentials: 'include',
-
-                body: JSON.stringify({
-
-                    id,
-                    fecha,
-                    hora
-
-                })
-
-            }
-        );
-
-        const data =
-            await res.json();
-
-        alert(data.mensaje);
+});
 
     }
 
@@ -398,6 +306,7 @@ async function guardarBracketFechaHora(id) {
 // =======================
 // 💾 RESULTADO
 // =======================
+
 async function guardarResultado(id) {
 
     try {
@@ -412,18 +321,19 @@ async function guardarResultado(id) {
                 `away-${id}`
             ).value;
 
-        const res = await fetch(
-            '/resultado',
-            {
+        const res =
+            await fetch('/resultado', {
 
                 method: 'POST',
 
+                credentials: 'include',
+
                 headers: {
+
                     'Content-Type':
                         'application/json'
-                },
 
-                credentials: 'include',
+                },
 
                 body: JSON.stringify({
 
@@ -433,8 +343,7 @@ async function guardarResultado(id) {
 
                 })
 
-            }
-        );
+            });
 
         const data =
             await res.json();
@@ -442,6 +351,120 @@ async function guardarResultado(id) {
         alert(data.mensaje);
 
         cargarAdmin();
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+}
+
+// =======================
+// 💾 FECHA/HORA PARTIDO
+// =======================
+
+async function guardarFechaHora(id) {
+
+    try {
+
+        const fecha =
+            document.getElementById(
+                `fecha-${id}`
+            ).value;
+
+        const hora =
+            document.getElementById(
+                `hora-${id}`
+            ).value;
+
+        const res =
+            await fetch('/editar-partido', {
+
+                method: 'POST',
+
+                credentials: 'include',
+
+                headers: {
+
+                    'Content-Type':
+                        'application/json'
+
+                },
+
+                body: JSON.stringify({
+
+                    id,
+                    fecha,
+                    hora
+
+                })
+
+            });
+
+        const data =
+            await res.json();
+
+        alert(data.mensaje);
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+}
+
+// =======================
+// 💾 FECHA/HORA BRACKET
+// =======================
+
+async function guardarBracketFechaHora(id) {
+
+    try {
+
+        const fecha =
+            document.getElementById(
+                `fecha-bracket-${id}`
+            ).value;
+
+        const hora =
+            document.getElementById(
+                `hora-bracket-${id}`
+            ).value;
+
+        const res =
+            await fetch('/editar-bracket', {
+
+                method: 'POST',
+
+                credentials: 'include',
+
+                headers: {
+
+                    'Content-Type':
+                        'application/json'
+
+                },
+
+                body: JSON.stringify({
+
+                    id,
+                    fecha,
+                    hora
+
+                })
+
+            });
+
+        const data =
+            await res.json();
+
+        alert(data.mensaje);
 
     }
 
@@ -456,26 +479,31 @@ async function guardarResultado(id) {
 // =======================
 // ❌ ELIMINAR PARTIDO
 // =======================
+
 async function eliminarPartido(id) {
+
+    if (
+        !confirm(
+            '¿Eliminar partido?'
+        )
+    ) return;
 
     try {
 
-        if (
-            !confirm(
-                '¿Eliminar partido?'
-            )
-        ) return;
+        const res =
+            await fetch(
 
-        const res = await fetch(
-            '/eliminar-partido/' + id,
-            {
+                `/eliminar-partido/${id}`,
 
-                method: 'DELETE',
+                {
 
-                credentials: 'include'
+                    method: 'DELETE',
 
-            }
-        );
+                    credentials: 'include'
+
+                }
+
+            );
 
         const data =
             await res.json();
@@ -495,8 +523,9 @@ async function eliminarPartido(id) {
 }
 
 // =======================
-// 🏆 GUARDAR GANADOR
+// 💾 GANADOR
 // =======================
+
 async function guardarGanador(id) {
 
     try {
@@ -506,38 +535,31 @@ async function guardarGanador(id) {
                 `ganador-${id}`
             ).value;
 
-        if (!ganador) {
+        const res =
+            await fetch(
+                '/resultado-bracket',
+                {
 
-            alert(
-                'Selecciona ganador'
+                    method: 'POST',
+
+                    credentials: 'include',
+
+                    headers: {
+
+                        'Content-Type':
+                            'application/json'
+
+                    },
+
+                    body: JSON.stringify({
+
+                        id,
+                        ganador
+
+                    })
+
+                }
             );
-
-            return;
-
-        }
-
-        const res = await fetch(
-            '/resultado-bracket',
-            {
-
-                method: 'POST',
-
-                headers: {
-                    'Content-Type':
-                        'application/json'
-                },
-
-                credentials: 'include',
-
-                body: JSON.stringify({
-
-                    id,
-                    ganador
-
-                })
-
-            }
-        );
 
         const data =
             await res.json();
@@ -559,26 +581,31 @@ async function guardarGanador(id) {
 // =======================
 // ❌ ELIMINAR BRACKET
 // =======================
+
 async function eliminarBracket(id) {
+
+    if (
+        !confirm(
+            '¿Eliminar llave?'
+        )
+    ) return;
 
     try {
 
-        if (
-            !confirm(
-                '¿Eliminar llave?'
-            )
-        ) return;
+        const res =
+            await fetch(
 
-        const res = await fetch(
-            '/eliminar-bracket/' + id,
-            {
+                `/eliminar-bracket/${id}`,
 
-                method: 'DELETE',
+                {
 
-                credentials: 'include'
+                    method: 'DELETE',
 
-            }
-        );
+                    credentials: 'include'
+
+                }
+
+            );
 
         const data =
             await res.json();
@@ -597,66 +624,53 @@ async function eliminarBracket(id) {
 
 }
 
+
 // =======================
 // ➕ CREAR PARTIDO
 // =======================
+
 async function crearPartido() {
 
     try {
 
         const grupo =
-            document.getElementById(
-                'grupo'
-            ).value;
+            document.getElementById('grupo').value;
 
         const homeTeam =
-            document.getElementById(
-                'homeTeam'
-            ).value;
+            document.getElementById('homeTeam').value;
 
         const awayTeam =
-            document.getElementById(
-                'awayTeam'
-            ).value;
+            document.getElementById('awayTeam').value;
 
         const fecha =
-            document.getElementById(
-                'fecha'
-            ).value;
+            document.getElementById('fecha').value;
 
         const hora =
-            document.getElementById(
-                'hora'
-            ).value;
+            document.getElementById('hora').value;
 
-        const res = await fetch(
-            '/crear-partido',
-            {
+        const res = await fetch('/crear-partido', {
 
-                method: 'POST',
+            method: 'POST',
 
-                headers: {
-                    'Content-Type':
-                        'application/json'
-                },
+            credentials: 'include',
 
-                credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
 
-                body: JSON.stringify({
+            body: JSON.stringify({
 
-                    grupo,
-                    homeTeam,
-                    awayTeam,
-                    fecha,
-                    hora
+                grupo,
+                homeTeam,
+                awayTeam,
+                fecha,
+                hora
 
-                })
+            })
 
-            }
-        );
+        });
 
-        const data =
-            await res.json();
+        const data = await res.json();
 
         alert(data.mensaje);
 
@@ -675,63 +689,41 @@ async function crearPartido() {
 // =======================
 // ➕ CREAR BRACKET
 // =======================
+
 async function crearBracket() {
 
     try {
 
         const fase =
-            document.getElementById(
-                'fase'
-            ).value;
+            document.getElementById('fase').value;
 
         const equipo1 =
-            document.getElementById(
-                'eq1'
-            ).value;
+            document.getElementById('eq1').value;
 
         const equipo2 =
-            document.getElementById(
-                'eq2'
-            ).value;
+            document.getElementById('eq2').value;
 
-        const fecha =
-            document.getElementById(
-                'fechaBracket'
-            ).value;
+        const res = await fetch('/crear-bracket', {
 
-        const hora =
-            document.getElementById(
-                'horaBracket'
-            ).value;
+            method: 'POST',
 
-        const res = await fetch(
-            '/crear-bracket',
-            {
+            credentials: 'include',
 
-                method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
 
-                headers: {
-                    'Content-Type':
-                        'application/json'
-                },
+            body: JSON.stringify({
 
-                credentials: 'include',
+                fase,
+                equipo1,
+                equipo2
 
-                body: JSON.stringify({
+            })
 
-                    fase,
-                    equipo1,
-                    equipo2,
-                    fecha,
-                    hora
+        });
 
-                })
-
-            }
-        );
-
-        const data =
-            await res.json();
+        const data = await res.json();
 
         alert(data.mensaje);
 
@@ -748,162 +740,178 @@ async function crearBracket() {
 }
 
 // =======================
-// ⚙️ GENERAR 32AVOS
+// ⚙️ GENERADORES
 // =======================
+
 async function generar32avos() {
 
-    try {
+    const res =
+        await fetch('/generar-32avos', {
 
-        const res = await fetch(
-            '/generar-32avos',
-            {
+            method: 'POST',
+            credentials: 'include'
 
-                method: 'POST',
+        });
 
-                credentials: 'include'
+    const data = await res.json();
 
-            }
-        );
-
-        const data =
-            await res.json();
-
-        alert(data.mensaje);
-
-        cargarAdmin();
-
-    }
-
-    catch (error) {
-
-        console.log(error);
-
-    }
+    alert(data.mensaje);
 
 }
 
-// =======================
-// ⚙️ GENERAR OCTAVOS
-// =======================
 async function generarOctavos() {
 
-    try {
+    const res =
+        await fetch('/generar-octavos', {
 
-        const res = await fetch(
-            '/generar-octavos',
-            {
+            method: 'POST',
+            credentials: 'include'
 
-                method: 'POST',
+        });
 
-                credentials: 'include'
+    const data = await res.json();
 
-            }
-        );
-
-        const data =
-            await res.json();
-
-        alert(data.mensaje);
-
-        cargarAdmin();
-
-    }
-
-    catch (error) {
-
-        console.log(error);
-
-    }
+    alert(data.mensaje);
 
 }
 
-// =======================
-// ⚙️ GENERAR CUARTOS
-// =======================
 async function generarCuartos() {
 
-    try {
+    const res =
+        await fetch('/generar-cuartos', {
 
-        const res = await fetch(
-            '/generar-cuartos',
-            {
+            method: 'POST',
+            credentials: 'include'
 
-                method: 'POST',
+        });
 
-                credentials: 'include'
+    const data = await res.json();
 
-            }
-        );
-
-        const data =
-            await res.json();
-
-        alert(data.mensaje);
-
-        cargarAdmin();
-
-    }
-
-    catch (error) {
-
-        console.log(error);
-
-    }
+    alert(data.mensaje);
 
 }
 
-// =======================
-// ⚙️ GENERAR SEMIS
-// =======================
 async function generarSemis() {
 
-    try {
+    const res =
+        await fetch('/generar-semis', {
 
-        const res = await fetch(
-            '/generar-semis',
-            {
+            method: 'POST',
+            credentials: 'include'
 
-                method: 'POST',
+        });
 
-                credentials: 'include'
+    const data = await res.json();
 
-            }
-        );
-
-        const data =
-            await res.json();
-
-        alert(data.mensaje);
-
-        cargarAdmin();
-
-    }
-
-    catch (error) {
-
-        console.log(error);
-
-    }
+    alert(data.mensaje);
 
 }
 
-// =======================
-// ⚙️ GENERAR FINAL
-// =======================
 async function generarFinal() {
 
+    const res =
+        await fetch('/generar-final', {
+
+            method: 'POST',
+            credentials: 'include'
+
+        });
+
+    const data = await res.json();
+
+    alert(data.mensaje);
+
+}
+
+
+
+
+// =======================
+// 🚀 INIT
+// =======================
+
+window.onload = async () => {
+
+    const ok =
+        await validarAdmin();
+
+    if (!ok) return;
+
+    cargarAdmin();
+
+};
+// =======================
+// 🗑️ REINICIAR TORNEO
+// =======================
+
+async function reiniciarTorneo() {
+
+    const confirmar =
+        confirm(
+            'Esto eliminará resultados, apuestas y puntos. ¿Continuar?'
+        );
+
+    if (!confirmar) return;
+
     try {
 
-        const res = await fetch(
-            '/generar-final',
-            {
+        const res =
+            await fetch('/reiniciar-torneo', {
 
                 method: 'POST',
 
                 credentials: 'include'
 
-            }
+            });
+
+        const data =
+            await res.json();
+
+        console.log(data);
+
+        alert(data.mensaje);
+
+        if (data.ok) {
+
+            cargarAdmin();
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+        alert('Error conectando servidor');
+
+    }
+
+}
+
+// =======================
+// 🏆 REINICIAR BRACKETS
+// =======================
+
+async function reiniciarBrackets() {
+
+    const confirmar =
+        confirm(
+            'Esto eliminará brackets y apuestas de brackets'
         );
+
+    if (!confirmar) return;
+
+    try {
+
+        const res =
+            await fetch('/reiniciar-brackets', {
+
+                method: 'POST',
+
+                credentials: 'include'
+
+            });
 
         const data =
             await res.json();
@@ -921,6 +929,3 @@ async function generarFinal() {
     }
 
 }
-
-// 🚀 INIT
-cargarAdmin();

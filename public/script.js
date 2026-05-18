@@ -1,6 +1,7 @@
 // =======================
-// 👤 OBTENER USUARIO
+// 👤 USUARIO
 // =======================
+
 function obtenerUsuario() {
 
     return JSON.parse(
@@ -10,14 +11,70 @@ function obtenerUsuario() {
 }
 
 // =======================
+// 🔒 VALIDAR SESION
+// =======================
+
+async function validarSesion() {
+
+    try {
+
+        const res =
+            await fetch('/session', {
+
+                credentials: 'include'
+
+            });
+
+        const data =
+            await res.json();
+
+        if (!data.user) {
+
+            localStorage.removeItem('usuario');
+
+            window.location.href =
+                '/login.html';
+
+            return false;
+
+        }
+
+        localStorage.setItem(
+            'usuario',
+            JSON.stringify(data.user)
+        );
+
+        return true;
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+        window.location.href =
+            '/login.html';
+
+        return false;
+
+    }
+
+}
+
+// =======================
 // 🚪 LOGOUT
 // =======================
+
 async function logout() {
 
     try {
 
         await fetch('/logout', {
-            method: 'POST'
+
+            method: 'POST',
+
+            credentials: 'include'
+
         });
 
         localStorage.removeItem('usuario');
@@ -36,8 +93,9 @@ async function logout() {
 }
 
 // =======================
-// ⏳ CONTADOR APUESTAS
+// ⏳ CONTADOR
 // =======================
+
 function calcularTiempoRestante(
     fecha,
     hora
@@ -82,198 +140,19 @@ function calcularTiempoRestante(
 }
 
 // =======================
-// 📊 TABLA
+// ⚽ CARGAR PARTIDOS
 // =======================
-async function cargarTabla() {
 
-    try {
-
-        const res =
-            await fetch('/tabla?t=' + Date.now());
-
-        const data = await res.json();
-
-        const tbody =
-            document.getElementById('tabla');
-
-        if (!tbody) return;
-
-        tbody.innerHTML = '';
-
-        data.forEach((row, index) => {
-
-            let clase = 'fila-normal';
-
-            if (row.estado === 'exacto') {
-
-                clase = 'fila-exacto';
-
-            }
-
-            else if (row.estado === 'ganador') {
-
-                clase = 'fila-ganador';
-
-            }
-
-            else {
-
-                clase = 'fila-fallo';
-
-            }
-
-            tbody.innerHTML += `
-
-                <tr class="${clase}">
-
-                    <td>${index + 1}</td>
-
-                    <td>${row.nombre}</td>
-
-                    <td>${row.partido}</td>
-
-                    <td>${row.prediccion}</td>
-
-                    <td>${row.resultadoReal}</td>
-
-                    <td>${row.puntos}</td>
-
-                    <td>${row.estado}</td>
-
-                </tr>
-
-            `;
-
-        });
-
-    }
-
-    catch (error) {
-
-        console.log(error);
-
-    }
-
-}
-
-// =======================
-// 🏆 RANKING
-// =======================
-async function cargarRanking() {
-
-    try {
-
-        const usuario =
-            obtenerUsuario();
-
-        const res =
-            await fetch('/ranking?t=' + Date.now());
-
-        const data =
-            await res.json();
-
-        const tbody =
-            document.getElementById('ranking');
-
-        if (!tbody) return;
-
-        tbody.innerHTML = '';
-
-        data.forEach((user, index) => {
-
-            tbody.innerHTML += `
-
-                <tr>
-
-                    <td>${index + 1}</td>
-
-                    <td>${user.nombre}</td>
-
-                    <td>${user.puntos}</td>
-
-                    ${
-                        usuario &&
-                        usuario.rol === 'admin'
-
-                        ?
-
-                        `
-
-                        <td>
-
-                            <button onclick="eliminarUsuario(${user.id})">
-
-                                ❌
-
-                            </button>
-
-                        </td>
-
-                        `
-
-                        :
-
-                        '<td style="display:none"></td>'
-
-                    }
-
-                </tr>
-
-            `;
-
-        });
-
-    }
-
-    catch (error) {
-
-        console.log(error);
-
-    }
-
-}
-
-// =======================
-// ❌ ELIMINAR USUARIO
-// =======================
-async function eliminarUsuario(id) {
-
-    const confirmar =
-        confirm('¿Eliminar usuario?');
-
-    if (!confirmar) return;
-
-    try {
-
-        await fetch('/usuario/' + id, {
-
-            method: 'DELETE'
-
-        });
-
-        await cargarRanking();
-
-        await cargarTabla();
-
-    }
-
-    catch (error) {
-
-        console.log(error);
-
-    }
-
-}
-
-// =======================
-// ⚽ PARTIDOS
-// =======================
 async function cargarPartidos() {
 
     try {
 
         const res =
-            await fetch('/matches?t=' + Date.now());
+            await fetch('/matches', {
+
+                credentials: 'include'
+
+            });
 
         const matches =
             await res.json();
@@ -293,27 +172,24 @@ async function cargarPartidos() {
                     m.hora
                 );
 
-            select.innerHTML += `
+            const option =
+                document.createElement('option');
 
-                <option value="${m.id}">
+            option.value = m.id;
 
-                    [${m.grupo || m.fase || 'Llave'}]
+            option.textContent = `
 
-                    ${m.homeTeam || m.equipo1}
-
-                    vs
-
-                    ${m.awayTeam || m.equipo2}
-
-                    | ${m.fecha || ''}
-
-                    | ${m.hora || ''}
-
-                    | ${contador}
-
-                </option>
+[${m.grupo || '-'}]
+${m.homeTeam}
+vs
+${m.awayTeam}
+| ${m.fecha || ''}
+| ${m.hora || ''}
+| ${contador}
 
             `;
+
+            select.appendChild(option);
 
         });
 
@@ -330,6 +206,7 @@ async function cargarPartidos() {
 // =======================
 // 📝 APOSTAR
 // =======================
+
 const form =
     document.getElementById('formApuesta');
 
@@ -343,29 +220,40 @@ if (form) {
 
             try {
 
+                const matchId =
+                    document.getElementById(
+                        'matchId'
+                    ).value;
+
                 const home =
-                    document.getElementById('home').value;
+                    document.getElementById(
+                        'home'
+                    ).value;
 
                 const away =
-                    document.getElementById('away').value;
-
-                const matchId =
-                    document.getElementById('matchId').value;
+                    document.getElementById(
+                        'away'
+                    ).value;
 
                 const res =
                     await fetch('/apostar', {
 
                         method: 'POST',
 
+                        credentials: 'include',
+
                         headers: {
-                            'Content-Type': 'application/json'
+
+                            'Content-Type':
+                                'application/json'
+
                         },
 
                         body: JSON.stringify({
 
+                            matchId,
                             home,
-                            away,
-                            matchId
+                            away
 
                         })
 
@@ -394,14 +282,208 @@ if (form) {
 }
 
 // =======================
-// 🌍 TABLAS DE GRUPOS
+// 📊 TABLA
 // =======================
+
+async function cargarTabla() {
+
+    try {
+
+        const res =
+            await fetch('/tabla', {
+
+                credentials: 'include'
+
+            });
+
+        const data =
+            await res.json();
+
+        const tbody =
+            document.getElementById('tabla');
+
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        data.forEach((row, index) => {
+
+            tbody.innerHTML += `
+
+<tr>
+
+<td>${index + 1}</td>
+
+<td>${row.nombre}</td>
+
+<td>${row.partido}</td>
+
+<td>${row.prediccion}</td>
+
+<td>${row.resultadoReal}</td>
+
+<td>${row.puntos}</td>
+
+<td>${row.estado}</td>
+
+</tr>
+
+            `;
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+}
+
+// =======================
+// 🏆 RANKING
+// =======================
+
+async function cargarRanking() {
+
+    try {
+
+        const usuario =
+            obtenerUsuario();
+
+        const res =
+            await fetch('/ranking', {
+
+                credentials: 'include'
+
+            });
+
+        const data =
+            await res.json();
+
+        const tbody =
+            document.getElementById('ranking');
+
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        data.forEach((user, index) => {
+
+            tbody.innerHTML += `
+
+<tr>
+
+<td>${index + 1}</td>
+
+<td>${user.nombre}</td>
+
+<td>${user.puntos}</td>
+
+${
+    usuario &&
+    usuario.rol === 'admin'
+
+    ?
+
+    `
+
+<td>
+
+<button onclick="toggleUsuario(${user.id})">
+
+${user.activo ? '🔒' : '✅'}
+
+</button>
+
+<button onclick="eliminarUsuario(${user.id})">
+
+❌
+
+</button>
+
+<button onclick="resetPassword(${user.id})">
+
+🔑
+
+</button>
+
+
+
+</td>
+
+`
+
+    :
+
+    '<td></td>'
+}
+
+</tr>
+
+            `;
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+}
+
+// =======================
+// ❌ ELIMINAR USUARIO
+// =======================
+
+async function eliminarUsuario(id) {
+
+    const confirmar =
+        confirm('¿Eliminar usuario?');
+
+    if (!confirmar) return;
+
+    try {
+
+        await fetch(`/usuario/${id}`, {
+
+            method: 'DELETE',
+
+            credentials: 'include'
+
+        });
+
+        await cargarRanking();
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+}
+
+// =======================
+// 🌍 GRUPOS
+// =======================
+
 async function cargarGrupos() {
 
     try {
 
         const res =
-            await fetch('/grupos?t=' + Date.now());
+            await fetch('/grupos', {
+
+                credentials: 'include'
+
+            });
 
         const grupos =
             await res.json();
@@ -448,25 +530,17 @@ async function cargarGrupos() {
 
                 }
 
-                else if (index === 2) {
-
-                    tr.classList.add(
-                        'tercero'
-                    );
-
-                }
-
                 tr.innerHTML = `
 
-                    <td>${e.equipo || '-'}</td>
-                    <td>${e.pj ?? 0}</td>
-                    <td>${e.pg ?? 0}</td>
-                    <td>${e.pe ?? 0}</td>
-                    <td>${e.pp ?? 0}</td>
-                    <td>${e.gf ?? 0}</td>
-                    <td>${e.gc ?? 0}</td>
-                    <td>${e.dg ?? 0}</td>
-                    <td>${e.pts ?? 0}</td>
+<td>${e.equipo}</td>
+<td>${e.pj}</td>
+<td>${e.pg}</td>
+<td>${e.pe}</td>
+<td>${e.pp}</td>
+<td>${e.gf}</td>
+<td>${e.gc}</td>
+<td>${e.dg}</td>
+<td>${e.pts}</td>
 
                 `;
 
@@ -489,21 +563,18 @@ async function cargarGrupos() {
 }
 
 // =======================
-// 🚀 INICIAR
+// 🚀 INICIO
 // =======================
+
 window.onload = async () => {
+
+    const ok =
+        await validarSesion();
+
+    if (!ok) return;
 
     const usuario =
         obtenerUsuario();
-
-    if (!usuario) {
-
-        window.location.href =
-            '/login.html';
-
-        return;
-
-    }
 
     const adminBtn =
         document.getElementById(
@@ -542,16 +613,103 @@ window.onload = async () => {
 
     await cargarGrupos();
 
-    setInterval(async () => {
-
-        await cargarTabla();
-
-        await cargarRanking();
-
-        await cargarGrupos();
-
-        await cargarPartidos();
-
-    }, 30000);
-
 };
+// =======================
+// 🔑 RESET PASSWORD
+// =======================
+
+async function resetPassword(id) {
+
+    const nuevaPassword =
+        prompt(
+            'Nueva contraseña'
+        );
+
+    if (!nuevaPassword) return;
+
+    try {
+
+        const res =
+            await fetch('/reset-password', {
+
+                method: 'POST',
+
+                credentials: 'include',
+
+                headers: {
+
+                    'Content-Type':
+                        'application/json'
+
+                },
+
+                body: JSON.stringify({
+
+                    userId: id,
+                    nuevaPassword
+
+                })
+
+            });
+
+        const data =
+            await res.json();
+
+        alert(data.mensaje);
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+}
+// =======================
+// ✅ ACTIVAR USUARIO
+// =======================
+
+async function toggleUsuario(id) {
+
+    try {
+
+        const res =
+            await fetch('/toggle-usuario', {
+
+                method: 'POST',
+
+                credentials: 'include',
+
+                headers: {
+
+                    'Content-Type':
+                        'application/json'
+
+                },
+
+                body: JSON.stringify({
+
+                    id
+
+                })
+
+            });
+
+        const data =
+            await res.json();
+
+        alert(data.mensaje);
+
+        cargarRanking();
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+}
+
