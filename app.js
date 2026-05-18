@@ -1,5 +1,6 @@
 require('dotenv').config();
 console.log(process.env.SESSION_SECRET);
+const cors = require('cors');
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
@@ -8,6 +9,14 @@ const path = require('path');
 const pool = require('./db');
 
 const app = express();
+
+app.use(cors({
+
+    origin: true,
+
+    credentials: true
+
+}));
 
 
 app.get('/test-db', async (req, res) => {
@@ -61,6 +70,8 @@ app.use(express.static(
     path.join(__dirname, 'public')
 ));
 
+app.set('trust proxy', 1);
+
 app.use(session({
 
     secret: process.env.SESSION_SECRET,
@@ -71,9 +82,11 @@ app.use(session({
 
     cookie: {
 
-        secure: false,
+        secure: true,
 
         httpOnly: true,
+
+        sameSite: 'none',
 
         maxAge: 1000 * 60 * 60 * 24 * 7
 
