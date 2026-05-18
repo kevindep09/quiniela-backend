@@ -9,6 +9,7 @@ const path = require('path');
 const pool = require('./db');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 app.use(cors({
 
