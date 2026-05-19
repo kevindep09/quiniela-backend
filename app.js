@@ -1339,6 +1339,27 @@ if (
 
     const ahora = new Date();
 
+console.log({
+
+    fechaDB: match.fecha,
+
+    horaDB: match.hora,
+
+    fechaPartido,
+
+    limite,
+
+    ahora
+
+});
+
+
+
+
+
+
+
+
     // =========================
     // BLOQUEAR
     // =========================
