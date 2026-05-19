@@ -1286,44 +1286,36 @@ if (
 ) {
 
     // =========================
-    // FORMATEAR FECHA
+    // PARTIR FECHA
     // =========================
 
-    const fechaDB =
-
-        new Date(match.fecha)
-
-        .toISOString()
-
-        .split('T')[0];
+    const partesFecha =
+        String(match.fecha)
+        .split('-');
 
     // =========================
-    // FORMATEAR HORA
+    // PARTIR HORA
     // =========================
 
-    const horaDB =
-
+    const partesHora =
         String(match.hora)
-
         .split(':');
 
     // =========================
-    // CREAR FECHA DEL PARTIDO
+    // CREAR FECHA LOCAL
     // =========================
 
     const fechaPartido = new Date(
 
-        fechaDB
+        Number(partesFecha[0]), // año
 
-    );
+        Number(partesFecha[1]) - 1, // mes
 
-    fechaPartido.setHours(
+        Number(partesFecha[2]), // día
 
-        parseInt(horaDB[0]),
+        Number(partesHora[0]), // hora
 
-        parseInt(horaDB[1]),
-
-        0,
+        Number(partesHora[1]), // minuto
 
         0
 
@@ -1348,7 +1340,7 @@ if (
     const ahora = new Date();
 
     // =========================
-    // BLOQUEAR APUESTAS
+    // BLOQUEAR
     // =========================
 
     if (ahora >= limite) {
