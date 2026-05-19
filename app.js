@@ -1273,7 +1273,6 @@ if (
     });
 
 }
-
 // =========================
 // ⏰ VALIDAR CIERRE
 // =========================
@@ -1287,40 +1286,56 @@ if (
 ) {
 
     // =========================
-    // FECHA Y HORA DEL PARTIDO
+    // FORMATEAR FECHA
     // =========================
 
-    const fechaPartido = new Date(
+    const fechaDB =
+        match.fecha
+            .toISOString()
+            .split('T')[0];
 
-        `${match.fecha} ${match.hora}`
+    // =========================
+    // FORMATEAR HORA
+    // =========================
+
+    const horaDB =
+        match.hora
+            .toString()
+            .slice(0,5);
+
+    // =========================
+    // CREAR FECHA PARTIDO
+    // =========================
+
+    const fechaPartido =
+        new Date(
+
+            `${fechaDB}T${horaDB}:00`
+
+        );
+
+    // =========================
+    // RESTAR 15 MINUTOS
+    // =========================
+
+    fechaPartido.setMinutes(
+
+        fechaPartido.getMinutes() - 15
 
     );
 
     // =========================
-    // HORA ACTUAL
+    // FECHA ACTUAL
     // =========================
 
-    const ahora = new Date();
+    const ahora =
+        new Date();
 
     // =========================
-    // DIFERENCIA EN MINUTOS
+    // BLOQUEAR
     // =========================
 
-    const diferenciaMinutos =
-
-        (fechaPartido - ahora)
-
-        / 1000
-
-        / 60;
-
-    // =========================
-    // BLOQUEAR:
-    // - 15 MIN ANTES
-    // - PARTIDO INICIADO
-    // =========================
-
-    if (diferenciaMinutos <= 15) {
+    if (ahora >= fechaPartido) {
 
         return res.json({
 
