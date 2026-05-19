@@ -1287,52 +1287,40 @@ if (
 ) {
 
     // =========================
-    // FECHA REAL DEL PARTIDO
+    // FECHA Y HORA DEL PARTIDO
     // =========================
 
-    const fechaPartido =
-        new Date(
+    const fechaPartido = new Date(
 
-            `${match.fecha}T${match.hora}`
-
-        );
-
-    // =========================
-    // AJUSTAR ZONA HORARIA
-    // =========================
-    // Venezuela = -4
-    // Colombia = -5
-    // Argentina = -3
-    // España = +2
-    // =========================
-
-    fechaPartido.setHours(
-
-        fechaPartido.getHours() - 4
+        `${match.fecha} ${match.hora}`
 
     );
 
     // =========================
-    // CERRAR 15 MIN ANTES
+    // HORA ACTUAL
     // =========================
 
-    const limite =
-        new Date(fechaPartido);
-
-    limite.setMinutes(
-
-        limite.getMinutes() - 15
-
-    );
-
-    const ahora =
-        new Date();
+    const ahora = new Date();
 
     // =========================
-    // BLOQUEAR APUESTAS
+    // DIFERENCIA EN MINUTOS
     // =========================
 
-    if (ahora >= limite) {
+    const diferenciaMinutos =
+
+        (fechaPartido - ahora)
+
+        / 1000
+
+        / 60;
+
+    // =========================
+    // BLOQUEAR:
+    // - 15 MIN ANTES
+    // - PARTIDO INICIADO
+    // =========================
+
+    if (diferenciaMinutos <= 15) {
 
         return res.json({
 
