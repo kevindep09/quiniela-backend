@@ -698,8 +698,10 @@ app.post(
 
                 // total general
                 const total =
-                    normal[0].total +
-                    brackets[0].total;
+
+    parseInt(normal[0].total || 0) +
+
+    parseInt(brackets[0].total || 0);
 
                 await pool.query(
 
@@ -761,7 +763,47 @@ app.post(
             const userId =
                 req.session.usuario.id;
 
-            // verificar si ya apostó
+            // =========================
+            // VERIFICAR SI YA EXISTE
+            // RESULTADO REAL
+            // =========================
+
+            const [brackets] =
+                await pool.query(
+
+                    `SELECT ganador
+                     FROM brackets
+                     WHERE id=?`,
+
+                    [bracketId]
+
+                );
+
+            // 🚫 APUESTAS CERRADAS
+
+            if (
+
+                brackets.length > 0 &&
+
+                brackets[0].ganador
+
+            ) {
+
+                return res.json({
+
+                    ok: false,
+
+                    mensaje:
+                        'Las apuestas están cerradas'
+
+                });
+
+            }
+
+            // =========================
+            // VERIFICAR SI YA APOSTÓ
+            // =========================
+
             const [existe] =
                 await pool.query(
 
@@ -772,6 +814,10 @@ app.post(
                     [userId, bracketId]
 
                 );
+
+            // =========================
+            // UPDATE
+            // =========================
 
             if (existe.length > 0) {
 
@@ -791,6 +837,10 @@ app.post(
 
             }
 
+            // =========================
+            // INSERT
+            // =========================
+
             else {
 
                 await pool.query(
@@ -799,14 +849,16 @@ app.post(
                     (
                         userId,
                         bracketId,
-                        ganador
+                        ganador,
+                        puntos
                     )
-                    VALUES(?,?,?)`,
+                    VALUES(?,?,?,?)`,
 
                     [
                         userId,
                         bracketId,
-                        ganador
+                        ganador,
+                        0
                     ]
 
                 );
@@ -837,7 +889,6 @@ app.post(
 
     }
 );
-
 
 
 // ======================================================
@@ -1200,65 +1251,101 @@ app.post(
 
             const match =
                 matches[0];
+// =========================
+// 🚫 SI YA TIENE RESULTADO
+// =========================
 
-            // =========================
-            // 🚫 SI YA TIENE RESULTADO
-            // =========================
+if (
 
-            if (
-   match.homeResult !== null &&
+    match.homeResult !== null &&
+
     match.awayResult !== null
 
-            ) {
+) {
 
-                return res.json({
+    return res.json({
 
-                    ok: false,
+        ok: false,
 
-                    mensaje:
-                        'Las apuestas están cerradas'
+        mensaje:
+            'Las apuestas están cerradas'
 
-                });
+    });
 
-            }
+}
 
-            // =========================
-            // ⏰ VALIDAR CIERRE
-            // =========================
+// =========================
+// ⏰ VALIDAR CIERRE
+// =========================
 
-            if (
-                match.fecha &&
-                match.hora
-            ) {
+if (
 
-                const limite =
-                    new Date(
+    match.fecha &&
 
-                        `${match.fecha}T${match.hora}`
+    match.hora
 
-                    );
+) {
 
-                // CERRAR 15 MIN ANTES
+    // =========================
+    // FECHA REAL DEL PARTIDO
+    // =========================
 
-                limite.setMinutes(
-                    limite.getMinutes() - 15
-                );
+    const fechaPartido =
+        new Date(
 
-                if (new Date() > limite) {
+            `${match.fecha}T${match.hora}`
 
-                    return res.json({
+        );
 
-                        ok: false,
+    // =========================
+    // AJUSTAR ZONA HORARIA
+    // =========================
+    // Venezuela = -4
+    // Colombia = -5
+    // Argentina = -3
+    // España = +2
+    // =========================
 
-                        mensaje:
-                            'Las apuestas están cerradas'
+    fechaPartido.setHours(
 
-                    });
+        fechaPartido.getHours() - 4
 
-                }
+    );
 
-            }
+    // =========================
+    // CERRAR 15 MIN ANTES
+    // =========================
 
+    const limite =
+        new Date(fechaPartido);
+
+    limite.setMinutes(
+
+        limite.getMinutes() - 15
+
+    );
+
+    const ahora =
+        new Date();
+
+    // =========================
+    // BLOQUEAR APUESTAS
+    // =========================
+
+    if (ahora >= limite) {
+
+        return res.json({
+
+            ok: false,
+
+            mensaje:
+                'Las apuestas están cerradas'
+
+        });
+
+    }
+
+}
             // =========================
             // VERIFICAR SI YA EXISTE
             // =========================
