@@ -1286,15 +1286,13 @@ if (
 ) {
 
     // =========================
-    // PARTIR FECHA
+    // FECHA MYSQL
     // =========================
 
-    const partesFecha =
-        String(match.fecha)
-        .split('-');
+    const fecha = new Date(match.fecha);
 
     // =========================
-    // PARTIR HORA
+    // HORA MYSQL
     // =========================
 
     const partesHora =
@@ -1302,20 +1300,20 @@ if (
         .split(':');
 
     // =========================
-    // CREAR FECHA LOCAL
+    // CREAR FECHA PARTIDO
     // =========================
 
     const fechaPartido = new Date(
 
-        Number(partesFecha[0]), // año
+        fecha.getFullYear(),
 
-        Number(partesFecha[1]) - 1, // mes
+        fecha.getMonth(),
 
-        Number(partesFecha[2]), // día
+        fecha.getDate(),
 
-        Number(partesHora[0]), // hora
+        parseInt(partesHora[0]),
 
-        Number(partesHora[1]), // minuto
+        parseInt(partesHora[1]),
 
         0
 
@@ -1338,27 +1336,6 @@ if (
     // =========================
 
     const ahora = new Date();
-
-console.log({
-
-    fechaDB: match.fecha,
-
-    horaDB: match.hora,
-
-    fechaPartido,
-
-    limite,
-
-    ahora
-
-});
-
-
-
-
-
-
-
 
     // =========================
     // BLOQUEAR
