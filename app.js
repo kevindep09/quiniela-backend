@@ -1290,37 +1290,54 @@ if (
     // =========================
 
     const fechaDB =
-        match.fecha
-            .toISOString()
-            .split('T')[0];
+
+        new Date(match.fecha)
+
+        .toISOString()
+
+        .split('T')[0];
 
     // =========================
     // FORMATEAR HORA
     // =========================
 
     const horaDB =
-        match.hora
-            .toString()
-            .slice(0,5);
+
+        String(match.hora)
+
+        .split(':');
 
     // =========================
-    // CREAR FECHA PARTIDO
+    // CREAR FECHA DEL PARTIDO
     // =========================
 
-    const fechaPartido =
-        new Date(
+    const fechaPartido = new Date(
 
-            `${fechaDB}T${horaDB}:00`
+        fechaDB
 
-        );
+    );
+
+    fechaPartido.setHours(
+
+        parseInt(horaDB[0]),
+
+        parseInt(horaDB[1]),
+
+        0,
+
+        0
+
+    );
 
     // =========================
     // RESTAR 15 MINUTOS
     // =========================
 
-    fechaPartido.setMinutes(
+    const limite = new Date(
 
-        fechaPartido.getMinutes() - 15
+        fechaPartido.getTime()
+
+        - (15 * 60 * 1000)
 
     );
 
@@ -1328,14 +1345,13 @@ if (
     // FECHA ACTUAL
     // =========================
 
-    const ahora =
-        new Date();
+    const ahora = new Date();
 
     // =========================
-    // BLOQUEAR
+    // BLOQUEAR APUESTAS
     // =========================
 
-    if (ahora >= fechaPartido) {
+    if (ahora >= limite) {
 
         return res.json({
 
