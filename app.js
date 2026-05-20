@@ -1286,13 +1286,22 @@ if (
 ) {
 
     // =========================
-    // FECHA MYSQL
+    // FECHA MYSQL STRING
     // =========================
 
-    const fecha = new Date(match.fecha);
+    const fechaTexto =
+        String(match.fecha)
+        .split('T')[0];
 
     // =========================
-    // HORA MYSQL
+    // PARTIR FECHA
+    // =========================
+
+    const partesFecha =
+        fechaTexto.split('-');
+
+    // =========================
+    // PARTIR HORA
     // =========================
 
     const partesHora =
@@ -1300,20 +1309,20 @@ if (
         .split(':');
 
     // =========================
-    // FECHA DEL PARTIDO
+    // CREAR FECHA LOCAL
     // =========================
 
     const fechaPartido = new Date(
 
-        fecha.getFullYear(),
+        Number(partesFecha[0]),
 
-        fecha.getMonth(),
+        Number(partesFecha[1]) - 1,
 
-        fecha.getDate(),
+        Number(partesFecha[2]),
 
-        parseInt(partesHora[0]),
+        Number(partesHora[0]),
 
-        parseInt(partesHora[1]),
+        Number(partesHora[1]),
 
         0
 
