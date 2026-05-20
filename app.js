@@ -1337,6 +1337,32 @@ app.post(
                 const ahora =
                     new Date();
 
+
+console.log({
+
+    fechaMYSQL: match.fecha,
+
+    horaMYSQL: match.hora,
+
+    fechaTexto,
+
+    partesFecha,
+
+    partesHora,
+
+    fechaPartido,
+
+    limite,
+
+    ahora
+
+});
+
+
+
+
+
+
                 // BLOQUEAR
 
                 if (ahora >= limite) {
