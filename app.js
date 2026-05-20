@@ -1207,6 +1207,8 @@ app.post(
 // ⚽ APOSTAR
 // ======================================================
 
+
+
 app.post(
     '/apostar',
     verificarToken,
@@ -1251,119 +1253,208 @@ app.post(
 
             const match =
                 matches[0];
-// =========================
-// 🚫 SI YA TIENE RESULTADO
-// =========================
 
-if (
+            // =========================
+            // 🚫 SI YA TIENE RESULTADO
+            // =========================
 
-    match.homeResult !== null &&
+            if (
 
-    match.awayResult !== null
+                match.homeResult !== null &&
 
-) {
+                match.awayResult !== null
 
-    return res.json({
+            ) {
 
-        ok: false,
+                return res.json({
 
-        mensaje:
-            'Las apuestas están cerradas'
+                    ok: false,
 
-    });
+                    mensaje:
+                        'Las apuestas están cerradas'
 
-}
-// =========================
-// ⏰ VALIDAR CIERRE
-// =========================
+                });
 
-if (
+            }
 
-    match.fecha &&
+            // =========================
+            // ⏰ VALIDAR CIERRE
+            // =========================
 
-    match.hora
+            if (
 
-) {
+                match.fecha &&
 
-    // =========================
-    // FECHA MYSQL STRING
-    // =========================
+                match.hora
 
-    const fechaTexto =
-        String(match.fecha)
-        .split('T')[0];
+            ) {
 
-    // =========================
-    // PARTIR FECHA
-    // =========================
+                // FECHA STRING
 
-    const partesFecha =
-        fechaTexto.split('-');
+                const fechaTexto =
+                    String(match.fecha)
+                    .split('T')[0];
 
-    // =========================
-    // PARTIR HORA
-    // =========================
+                // PARTIR FECHA
 
-    const partesHora =
-        String(match.hora)
-        .split(':');
+                const partesFecha =
+                    fechaTexto.split('-');
 
-    // =========================
-    // CREAR FECHA LOCAL
-    // =========================
+                // PARTIR HORA
 
-    const fechaPartido = new Date(
+                const partesHora =
+                    String(match.hora)
+                    .split(':');
 
-        Number(partesFecha[0]),
+                // CREAR FECHA LOCAL
 
-        Number(partesFecha[1]) - 1,
+                const fechaPartido = new Date(
 
-        Number(partesFecha[2]),
+                    Number(partesFecha[0]),
 
-        Number(partesHora[0]),
+                    Number(partesFecha[1]) - 1,
 
-        Number(partesHora[1]),
+                    Number(partesFecha[2]),
 
-        0
+                    Number(partesHora[0]),
 
-    );
+                    Number(partesHora[1]),
 
-    // =========================
-    // RESTAR 15 MINUTOS
-    // =========================
+                    0
 
-    const limite = new Date(
+                );
 
-        fechaPartido.getTime()
+                // RESTAR 15 MINUTOS
 
-        - (15 * 60 * 1000)
+                const limite = new Date(
 
-    );
+                    fechaPartido.getTime()
 
-    // =========================
-    // FECHA ACTUAL
-    // =========================
+                    - (15 * 60 * 1000)
 
-    const ahora = new Date();
+                );
 
-    // =========================
-    // BLOQUEAR
-    // =========================
+                const ahora =
+                    new Date();
 
-    if (ahora >= limite) {
+                // BLOQUEAR
 
-        return res.json({
+                if (ahora >= limite) {
 
-            ok: false,
+                    return res.json({
 
-            mensaje:
-                'Las apuestas están cerradas'
+                        ok: false,
 
-        });
+                        mensaje:
+                            'Las apuestas están cerradas'
+
+                    });
+
+                }
+
+            }
+
+            // =========================
+            // VERIFICAR SI YA EXISTE
+            // =========================
+
+            const [existe] =
+                await pool.query(
+
+                    `SELECT *
+                     FROM apuestas
+                     WHERE userId=? AND matchId=?`,
+
+                    [
+                        userId,
+                        matchId
+                    ]
+
+                );
+
+            // =========================
+            // UPDATE
+            // =========================
+
+            if (existe.length > 0) {
+
+                await pool.query(
+
+                    `UPDATE apuestas
+                     SET
+                     home=?,
+                     away=?
+                     WHERE userId=? AND matchId=?`,
+
+                    [
+                        home,
+                        away,
+                        userId,
+                        matchId
+                    ]
+
+                );
+
+            }
+
+            // =========================
+            // INSERT
+            // =========================
+
+            else {
+
+                await pool.query(
+
+                    `INSERT INTO apuestas
+                    (
+                        userId,
+                        matchId,
+                        home,
+                        away,
+                        puntos,
+                        estado
+                    )
+                    VALUES(?,?,?,?,?,?)`,
+
+                    [
+                        userId,
+                        matchId,
+                        home,
+                        away,
+                        0,
+                        'pendiente'
+                    ]
+
+                );
+
+            }
+
+            res.json({
+
+                ok: true,
+                mensaje: 'Apuesta guardada'
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({
+
+                ok: false,
+                mensaje: 'Error apuesta'
+
+            });
+
+        }
 
     }
+);
 
-}
+
             // =========================
             // INSERT
             // =========================
