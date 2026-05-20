@@ -1300,24 +1300,32 @@ if (
         .split(':');
 
     // =========================
-    // CREAR FECHA PARTIDO
+    // CREAR FECHA LOCAL
     // =========================
 
-    const fechaPartido = new Date(
+    const fechaPartido = new Date();
 
-        fecha.getFullYear(),
-
-        fecha.getMonth(),
-
-        fecha.getDate(),
-
-        parseInt(partesHora[0]),
-
-        parseInt(partesHora[1]),
-
-        0
-
+    fechaPartido.setFullYear(
+        fecha.getUTCFullYear()
     );
+
+    fechaPartido.setMonth(
+        fecha.getUTCMonth()
+    );
+
+    fechaPartido.setDate(
+        fecha.getUTCDate()
+    );
+
+    fechaPartido.setHours(
+        parseInt(partesHora[0])
+    );
+
+    fechaPartido.setMinutes(
+        parseInt(partesHora[1])
+    );
+
+    fechaPartido.setSeconds(0);
 
     // =========================
     // RESTAR 15 MINUTOS
@@ -1338,6 +1346,18 @@ if (
     const ahora = new Date();
 
     // =========================
+    // DEBUG
+    // =========================
+
+    console.log({
+
+        fechaPartido,
+        limite,
+        ahora
+
+    });
+
+    // =========================
     // BLOQUEAR
     // =========================
 
@@ -1355,48 +1375,6 @@ if (
     }
 
 }
-            // =========================
-            // VERIFICAR SI YA EXISTE
-            // =========================
-
-            const [existe] =
-                await pool.query(
-
-                    `SELECT *
-                     FROM apuestas
-                     WHERE userId=? AND matchId=?`,
-
-                    [
-                        userId,
-                        matchId
-                    ]
-
-                );
-
-            // =========================
-            // UPDATE
-            // =========================
-
-            if (existe.length > 0) {
-
-                await pool.query(
-
-                    `UPDATE apuestas
-                     SET
-                     home=?,
-                     away=?
-                     WHERE userId=? AND matchId=?`,
-
-                    [
-                        home,
-                        away,
-                        userId,
-                        matchId
-                    ]
-
-                );
-
-            }
 
             // =========================
             // INSERT
