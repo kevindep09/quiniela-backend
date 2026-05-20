@@ -1300,32 +1300,24 @@ if (
         .split(':');
 
     // =========================
-    // CREAR FECHA LOCAL
+    // FECHA DEL PARTIDO
     // =========================
 
-    const fechaPartido = new Date();
+    const fechaPartido = new Date(
 
-    fechaPartido.setFullYear(
-        fecha.getUTCFullYear()
+        fecha.getFullYear(),
+
+        fecha.getMonth(),
+
+        fecha.getDate(),
+
+        parseInt(partesHora[0]),
+
+        parseInt(partesHora[1]),
+
+        0
+
     );
-
-    fechaPartido.setMonth(
-        fecha.getUTCMonth()
-    );
-
-    fechaPartido.setDate(
-        fecha.getUTCDate()
-    );
-
-    fechaPartido.setHours(
-        parseInt(partesHora[0])
-    );
-
-    fechaPartido.setMinutes(
-        parseInt(partesHora[1])
-    );
-
-    fechaPartido.setSeconds(0);
 
     // =========================
     // RESTAR 15 MINUTOS
@@ -1346,26 +1338,6 @@ if (
     const ahora = new Date();
 
     // =========================
-    // DEBUG
-    // =========================
-
-    console.log({
-
-        fechaPartido,
-        limite,
-        ahora
-
-    });
-
-console.log(
-    'AHORA:',
-    ahora,
-    'LIMITE:',
-    limite
-);
-
-
-    // =========================
     // BLOQUEAR
     // =========================
 
@@ -1383,7 +1355,6 @@ console.log(
     }
 
 }
-
             // =========================
             // INSERT
             // =========================
